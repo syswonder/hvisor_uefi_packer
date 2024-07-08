@@ -28,6 +28,7 @@ SECTIONS
 
    *(.hvisor.bin)
    *(.hvisor.dtb)
+   *(.hvisor.zone0_vmlinux)
 
    /* the EFI loader doesn't seem to like a .bss section, so we stick
       it all into .data: */

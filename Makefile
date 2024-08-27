@@ -58,7 +58,11 @@ ifeq ($(F_QEMU), 1)
 	CFLAGS += -DQEMU
 endif
 
-all: clean $(TARGET)
+all: pre clean $(TARGET)
+
+pre:
+	make -C ../hvisor ARCH=loongarch64 LOG=debug
+	make -C ../hvisor disa ARCH=loongarch64
 
 hvisor.so: $(OBJS)
 	$(LD) $(LDFLAGS) $^ -o $@ -lefi -lgnuefi
@@ -70,6 +74,7 @@ hvisor.so: $(OBJS)
 	$(OBJCOPY) -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel -j .rela -j .rel.* \
 			-j .rela.* -j .rel* -j .rela* -j .reloc -O binary $^ $@
 	cp $@ BOOTLOONGARCH64.EFI
+	@echo "ok"
 
 $(BUILD_DIR)/%.o: src/%.c
 	@mkdir -p $(@D)
@@ -88,7 +93,7 @@ clean:
 
 QEMU_CMD = $(QEMU) -bios QEMU_EFI.fd -kernel $(TARGET) -m 4G -smp 1 -nographic -serial mon:stdio
 
-run: clean $(TARGET)
+run: pre clean $(TARGET)
 	$(QEMU_CMD)
 
 run-debug: clean $(TARGET)
@@ -96,3 +101,38 @@ run-debug: clean $(TARGET)
 
 debug:
 	$(CROSS_GDB) -ex "file $(ELF_TARGET)" -ex "target remote localhost:1234" -ex "layout asm"
+
+USB_STICK=HVISOR_LA64
+USER=$(shell whoami)
+DEV_PATH=/media/${USER}/${USB_STICK}
+
+copy: all
+	@echo "Copying to USB stick"
+	rm -rf $(DEV_PATH)/EFI
+	mkdir -p $(DEV_PATH)/EFI/BOOT
+	cp BOOTLOONGARCH64.EFI $(DEV_PATH)/EFI/BOOT/BOOTLOONGARCH64.EFI
+	sync
+# unmount USB stick
+	@echo "Unmounting USB stick"
+	umount $(DEV_PATH)
+	@echo "Done"
+
+world:
+	unset LD_LIBRARY_PATH
+	@echo "$(LIGHTGREEN_S)building world$(LIGHTGREEN_E)"
+	@echo "$(LIGHTYELLOW_S)building hvisor kernel module and cmd tool$(LIGHTYELLOW_E)"
+	cd ../hvisor-tool && make tools && make driver
+	@echo "$(LIGHTYELLOW_S)copying hvisor kernel module and cmd tool$(LIGHTYELLOW_E)"
+	cd ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool && ./copy
+	@echo "$(LIGHTYELLOW_S)building guest os 1$(LIGHTYELLOW_E)"
+	cd ../guest_os_1 && make
+	cp ../guest_os_1/build/guest_os_1.bin ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/guest_os_1.bin
+	@echo "$(LIGHTYELLOW_S)copying last vmlinux.bin to buildroot$(LIGHTYELLOW_E)"
+	cp ../linux-6.9.8-la64/nonroot_tmp/vmlinux.bin ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/vmlinux.bin
+	@echo "$(LIGHTYELLOW_S)building buildroot$(LIGHTYELLOW_E)"
+	cd ../buildroot-loongarch64 && make -j16
+	@echo "$(LIGHTYELLOW_S)building linux kernel$(LIGHTYELLOW_E)"
+	cd ../linux-6.9.8-la64 && ./build kernel
+	@echo "$(LIGHTYELLOW_S)building hvisor.efi$(LIGHTYELLOW_E)"
+	make
+	@echo "$(LIGHTGREEN_S)building world done$(LIGHTGREEN_E)"

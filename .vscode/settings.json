@@ -9,9 +9,11 @@
       "*.S": "loongarch",
       "efi.h": "c",
       "regdef.h": "c",
-      "efilib.h": "c"
+      "efilib.h": "c",
+      "core.h": "c"
     },
     "editor.tabSize": 2,
     "editor.insertSpaces": true,
-    "editor.detectIndentation": false
+    "editor.detectIndentation": false,
+    "makefile.configureOnOpen": false
 }

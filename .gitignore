@@ -51,6 +51,7 @@ Module.symvers
 Mkfile.old
 dkms.conf
 *.efi
+*.EFI
 hvisor.asm
 hvisor.txt
 

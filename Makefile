@@ -119,20 +119,32 @@ copy: all
 
 world:
 	unset LD_LIBRARY_PATH
+	
 	@echo "$(LIGHTGREEN_S)building world$(LIGHTGREEN_E)"
+	
 	@echo "$(LIGHTYELLOW_S)building hvisor kernel module and cmd tool$(LIGHTYELLOW_E)"
 	cd ../hvisor-tool && make tools && make driver
+	
 	@echo "$(LIGHTYELLOW_S)copying hvisor kernel module and cmd tool$(LIGHTYELLOW_E)"
 	cd ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool && ./copy
-	@echo "$(LIGHTYELLOW_S)building guest os 1$(LIGHTYELLOW_E)"
-	cd ../guest_os_1 && make
-	cp ../guest_os_1/build/guest_os_1.bin ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/guest_os_1.bin
-	@echo "$(LIGHTYELLOW_S)copying last vmlinux.bin to buildroot$(LIGHTYELLOW_E)"
-	cp ../linux-6.9.8-la64/nonroot_tmp/vmlinux.bin ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/vmlinux.bin
+
+# @echo "$(LIGHTYELLOW_S)building guest os 1$(LIGHTYELLOW_E)"
+# cd ../guest_os_1 && make
+# cp ../guest_os_1/build/guest_os_1.bin ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/guest_os_1.bin
+
+	@echo "$(LIGHTYELLOW_S)building nonroot linux kernel$(LIGHTYELLOW_E)"
+	cd ../linux-6.9.8-la64 && ./build nonroot
+
+	@echo "$(LIGHTYELLOW_S)copying nonroot vmlinux.bin to buildroot$(LIGHTYELLOW_E)"
+	cp ../linux-6.9.8-la64/nr_tmp/vmlinux.bin ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/vmlinux.bin
+	
 	@echo "$(LIGHTYELLOW_S)building buildroot$(LIGHTYELLOW_E)"
 	cd ../buildroot-loongarch64 && make -j16
-	@echo "$(LIGHTYELLOW_S)building linux kernel$(LIGHTYELLOW_E)"
-	cd ../linux-6.9.8-la64 && ./build kernel
+
+	@echo "$(LIGHTYELLOW_S)building root linux kernel$(LIGHTYELLOW_E)"
+	cd ../linux-6.9.8-la64 && ./build def && ./build kernel
+	
 	@echo "$(LIGHTYELLOW_S)building hvisor.efi$(LIGHTYELLOW_E)"
 	make
+	
 	@echo "$(LIGHTGREEN_S)building world done$(LIGHTGREEN_E)"

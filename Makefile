@@ -123,7 +123,7 @@ world:
 	@echo "$(LIGHTGREEN_S)building world$(LIGHTGREEN_E)"
 	
 	@echo "$(LIGHTYELLOW_S)building hvisor kernel module and cmd tool$(LIGHTYELLOW_E)"
-	cd ../hvisor-tool && make tools && make driver
+	cd ../hvisor-tool && ./__loongarch_build.sh
 	
 	@echo "$(LIGHTYELLOW_S)copying hvisor kernel module and cmd tool$(LIGHTYELLOW_E)"
 	cd ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool && ./copy

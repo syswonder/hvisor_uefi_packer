@@ -60,8 +60,10 @@ endif
 
 all: pre clean $(TARGET)
 
+LOG ?= info
+
 pre:
-	make -C ../hvisor ARCH=loongarch64 LOG=debug
+	make -C ../hvisor ARCH=loongarch64 LOG=$(LOG)
 	make -C ../hvisor disa ARCH=loongarch64
 
 hvisor.so: $(OBJS)

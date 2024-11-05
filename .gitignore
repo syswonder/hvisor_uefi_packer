@@ -127,3 +127,6 @@ GTAGS
 *.orig
 *~
 \#*#
+*.EFI
+hvisor-uefi-img*
+hvisor-uefi-img.efi

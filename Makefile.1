@@ -25,7 +25,7 @@ OBJS = $(patsubst src/%.c,$(BUILD_DIR)/%.o,$(wildcard src/*.c)) \
 TARGET          = hvisor.efi
 WORKDIR         = $(shell pwd)/./
 ELF_TARGET      = $(WORKDIR)/../hvisor/target/loongarch64-unknown-none/debug/hvisor
-GNU_EFI         = $(WORKDIR)/gnu-efi-dev-la64
+GNU_EFI         = $(WORKDIR)/lib/gnu-efi
 EFIINC          = $(GNU_EFI)/inc
 EFIINCS         = -I$(EFIINC) -I$(EFIINC)/$(ARCH) -I$(EFIINC)/protocol
 hvisor_C_INC	= $(WORKDIR)/include
@@ -148,8 +148,5 @@ world:
 
 	@echo "$(LIGHTYELLOW_S)building root linux kernel$(LIGHTYELLOW_E)"
 	cd ../linux-6.9.8-la64 && ./build def && ./build kernel
-	
-	@echo "$(LIGHTYELLOW_S)building hvisor.efi$(LIGHTYELLOW_E)"
-	make
-	
+
 	@echo "$(LIGHTGREEN_S)building world done$(LIGHTGREEN_E)"

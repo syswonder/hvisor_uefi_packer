@@ -1,0 +1,33 @@
+mainmenu "hvisor UEFI Boot Image Packer Configuration Menu"
+
+# config the target arch as the first choice
+choice
+  prompt "Target Architecture"
+  default TARGET_ARCH_LOONGARCH64
+
+config TARGET_ARCH_LOONGARCH64
+  bool "loongarch64"
+  default y
+  help
+    Select this option if you are building for LoongArch64.
+endchoice
+
+config CROSS_COMPILE
+  string "Cross compiler prefix"
+  default "loongarch64-unknown-linux-gnu-"
+  help
+    Prefix for the cross compiler.
+
+config EMBEDDED_HVISOR_BIN_PATH
+  string "Path to the embedded hvisor.bin"
+  default "hvisor.bin"
+  help
+    Path to the embedded hvisor.bin file.
+
+config EMBEDDED_VMLINUX_BIN_PATH
+  string "Path to the embedded vmlinux.bin"
+  default "vmlinux.bin"
+  help
+    Path to the embedded vmlinux.bin file.
+
+# source "lib/Kconfig"

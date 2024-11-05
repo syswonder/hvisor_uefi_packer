@@ -134,6 +134,9 @@ world:
 # cd ../guest_os_1 && make
 # cp ../guest_os_1/build/guest_os_1.bin ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/guest_os_1.bin
 
+	@echo "$(LIGHTYELLOW_S)building simple rootfs$(LIGHTYELLOW_E)"
+	cd ../linux-6.9.8-la64/rootfs && make
+
 	@echo "$(LIGHTYELLOW_S)building nonroot linux kernel$(LIGHTYELLOW_E)"
 	cd ../linux-6.9.8-la64 && ./build nonroot
 

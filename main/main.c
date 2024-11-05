@@ -1,3 +1,15 @@
+/*
+  Copyright (c) 2024 wheatfox
+  hvisor_uefi_packer is licensed under Mulan PSL v2.
+  You can use this software according to the terms and conditions of the Mulan PSL v2.
+  You may obtain a copy of Mulan PSL v2 at:
+  http://license.coscl.org.cn/MulanPSL2
+  THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+  EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+  MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+  See the Mulan PSL v2 for more details.
+*/
+
 #include "core.h"
 #include <efi.h>
 #include <efilib.h>
@@ -175,8 +187,8 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   Print(L"Hello! This is the UEFI bootloader of hvisor(loongarch)...\n");
   Print(L"hvisor binary stored in .data, from 0x%lx to 0x%lx\n",
         hvisor_bin_start, hvisor_bin_end);
-  Print(L"hvisor dtb stored in .data, from 0x%lx to 0x%lx\n", hvisor_dtb_start,
-        hvisor_dtb_end);
+  // Print(L"hvisor dtb stored in .data, from 0x%lx to 0x%lx\n", hvisor_dtb_start,
+  //       hvisor_dtb_end);
 
   // set up 0x8 and 0x9 DMW
   set_dmw();
@@ -185,12 +197,12 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   // the entry is the same as the load address
 
   UINTN hvisor_bin_size = &hvisor_bin_end - &hvisor_bin_start;
-  UINTN hvisor_dtb_size = &hvisor_dtb_end - &hvisor_dtb_start;
+  // UINTN hvisor_dtb_size = &hvisor_dtb_end - &hvisor_dtb_start;
   UINTN hvisor_zone0_vmlinux_size =
       &hvisor_zone0_vmlinux_end - &hvisor_zone0_vmlinux_start;
 
   const UINTN hvisor_bin_addr = 0x9000000100010000ULL;
-  const UINTN hvisor_dtb_addr = 0x900000010000f000ULL;
+  // const UINTN hvisor_dtb_addr = 0x900000010000f000ULL;
   const UINTN hvisor_zone0_vmlinux_addr =
       0x9000000000200000ULL; // caution: this is actually a vmlinux.bin, not a
                              // vmlinux - wheatfox
@@ -213,8 +225,8 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
         L"===========\n");
   Print(L"hvisor binary range:\t\t\t0x%lx - 0x%lx\n", hvisor_bin_addr,
         hvisor_bin_addr + hvisor_bin_size);
-  Print(L"hvisor dtb range:\t\t\t0x%lx - 0x%lx\n", hvisor_dtb_addr,
-        hvisor_dtb_addr + hvisor_dtb_size);
+  // Print(L"hvisor dtb range:\t\t\t0x%lx - 0x%lx\n", hvisor_dtb_addr,
+  //       hvisor_dtb_addr + hvisor_dtb_size);
   Print(L"hvisor vmlinux.bin :\t\t\t0x%lx - 0x%lx\n", hvisor_zone0_vmlinux_addr,
         hvisor_zone0_vmlinux_addr + hvisor_zone0_vmlinux_size);
   Print(L"====================================================================="
@@ -225,17 +237,16 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
   // now we have exited boot services
   memcpy2((void *)hvisor_bin_addr, (void *)hvisor_bin_start, hvisor_bin_size);
-  memcpy2((void *)hvisor_dtb_addr, (void *)hvisor_dtb_start, hvisor_dtb_size);
+  // memcpy2((void *)hvisor_dtb_addr, (void *)hvisor_dtb_start, hvisor_dtb_size);
   memcpy2((void *)hvisor_zone0_vmlinux_addr, (void *)hvisor_zone0_vmlinux_start,
           hvisor_zone0_vmlinux_size);
 
   init_serial();
-
   print_str("Ok, ready to jump to hvisor entry...\n");
 
   //  place dtb addr in r5
   // as constant
-  asm volatile("li.d $r5, %0" ::"i"(hvisor_dtb_addr));
+  // asm volatile("li.d $r5, %0" ::"i"(hvisor_dtb_addr));
 
   void *hvisor_entry = (void *)hvisor_bin_addr;
   ((void (*)(void))hvisor_entry)();

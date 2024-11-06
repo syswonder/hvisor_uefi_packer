@@ -93,12 +93,12 @@ clean:
 	@rm -rf $(BUILD_DIR) $(DEBUG_DIR) *.efi *.so *.txt *.asm
 	$(foreach dir,$(GUEST_OS_DIRS),$(MAKE) -C $(GUEST_OS_DIRS_PREFIX)$(dir) clean;)
 
-QEMU_CMD = $(QEMU) -bios QEMU_EFI.fd -kernel $(TARGET) -m 4G -smp 1 -nographic -serial mon:stdio
+QEMU_CMD = $(QEMU) -bios firmware/QEMU_EFI.fd -kernel $(TARGET) -m 4G -smp 1 -nographic -serial mon:stdio
 
-run: pre clean $(TARGET)
+run:
 	$(QEMU_CMD)
 
-run-debug: clean $(TARGET)
+run-debug:
 	$(QEMU_CMD) -s -S
 
 debug:
@@ -108,7 +108,7 @@ USB_STICK=HVISOR_LA64
 USER=$(shell whoami)
 DEV_PATH=/media/${USER}/${USB_STICK}
 
-copy: all
+copy:
 	@echo "Copying to USB stick"
 	rm -rf $(DEV_PATH)/EFI
 	mkdir -p $(DEV_PATH)/EFI/BOOT

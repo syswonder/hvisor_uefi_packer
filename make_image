@@ -12,11 +12,20 @@ echo -e "${BOLD_START}${YELLOW_START}Building hvisor UEFI Boot Image, CMD=$CMD${
 $CMD
 echo -e "${BOLD_START}${YELLOW_START}Building hvisor shared object built, now building hvisor UEFI Boot Image${YELLOW_END}${BOLD_END}"
 OBJCOPY="loongarch64-unknown-linux-gnu-objcopy"
+READELF="loongarch64-unknown-linux-gnu-readelf"
+OBJDUMP="loongarch64-unknown-linux-gnu-objdump"
+TARGET_SO="main/built-in.o"
+TARGET_EFI="hvisor.efi"
+rm -f hvisor-uefi-img
 CMD2="${OBJCOPY} -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel -j .rela -j .rel.* \
--j .rela.* -j .rel* -j .rela* -j .reloc -O binary hvisor-uefi-img hvisor-uefi-img.efi"
+-j .rela.* -j .rel* -j .rela* -j .reloc -O binary ${TARGET_SO} ${TARGET_EFI}"
 echo -e "${BOLD_START}${YELLOW_START}Building hvisor UEFI Boot Image, CMD=$CMD2${YELLOW_END}${BOLD_END}"
 $CMD2
-cp hvisor-uefi-img.efi BOOTLOONGARCH64.EFI
+$READELF -a hvisor-uefi-img > hvisor-uefi-img.map
+$OBJDUMP -d hvisor-uefi-img > hvisor-uefi-img.dis
+$READELF -a main/built-in.o > main/built-in.map
+$OBJDUMP -d main/built-in.o > main/built-in.dis
+cp ${TARGET_EFI} BOOTLOONGARCH64.EFI
 # print file info and size of BOOTLOONGARCH64.EFI
 ls -lh BOOTLOONGARCH64.EFI
 file BOOTLOONGARCH64.EFI

@@ -17,4 +17,6 @@ arch_init:
     li.d    t0, CSR_DMW1_INIT
     csrwr   t0, LOONGARCH_CSR_DMWIN1 // 0x9 window cached
     csrrd   ra, LOONGARCH_CSR_KS0
+    // now let's invalidate all TLBs
+    invtlb  0, zero, zero
     ret

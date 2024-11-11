@@ -219,6 +219,11 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
       halt();
     }
   }
+  const UINTN memset2_st = 0x9000000000000000ULL + 0x1000;
+  const UINTN memset2_size = 0x10000;
+  Print(L"Clearing memory from 0x%lx to 0x%lx\n", memset2_st,
+        memset2_st + memset2_size);
+  memset2((void *)memset2_st, 0, memset2_size);
 
   // print range overview
   Print(L"====================================================================="

@@ -2,8 +2,10 @@
 # wheatfox 2024
 
 HVISOR_SRC_DIR=../hvisor # change to your hvisor source code directory, and use the dev-loongarch branch !
+HVISOR_LOG_LEVEL=info
+HVISOR_ARGS="ARCH=loongarch64 LOG=${HVISOR_LOG_LEVEL}"
 
-make -C ${HVISOR_SRC_DIR} ARCH=loongarch64
+make -C ${HVISOR_SRC_DIR} ${HVISOR_ARGS}
 
 YELLOW_START="\033[1;33m"
 YELLOW_END="\033[0m"

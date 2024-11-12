@@ -1,7 +1,15 @@
 #!/bin/bash
 # wheatfox 2024
 
-HVISOR_SRC_DIR=../hvisor # change to your hvisor source code directory, and use the dev-loongarch branch !
+# change to your hvisor source code directory, and use the dev-loongarch branch !
+HVISOR_SRC_DIR=../hvisor
+
+if [ ! -d ${HVISOR_SRC_DIR} ]; then
+    echo "Error: hvisor source code directory not found: ${HVISOR_SRC_DIR}"
+    echo "Please change the HVISOR_SRC_DIR variable in make_image script to your hvisor source code directory"
+    exit 1
+fi
+
 HVISOR_LOG_LEVEL=info
 HVISOR_ARGS="ARCH=loongarch64 LOG=${HVISOR_LOG_LEVEL}"
 

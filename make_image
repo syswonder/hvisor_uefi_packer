@@ -10,8 +10,10 @@ if [ ! -d ${HVISOR_SRC_DIR} ]; then
     exit 1
 fi
 
+ARCH=loongarch64
+# you can change the log level here which will be passed to hvisor makefile
 HVISOR_LOG_LEVEL=info
-HVISOR_ARGS="ARCH=loongarch64 LOG=${HVISOR_LOG_LEVEL}"
+HVISOR_ARGS="ARCH=${ARCH} LOG=${HVISOR_LOG_LEVEL}"
 
 make -C ${HVISOR_SRC_DIR} ${HVISOR_ARGS}
 
@@ -22,22 +24,20 @@ GREEN_END="\033[0m"
 BOLD_START="\033[1m"
 BOLD_END="\033[0m"
 
-make ARCH=loongarch64 clean
+make ARCH=${ARCH} clean
 
 cd lib/gnu-efi && ./build.sh
 cd ../..
 
-
-echo -e "wheatfox(enkerewpo@hotmail.com) 2024"
-CMD="make ARCH=loongarch64 V=1"
+CMD="make ARCH=${ARCH} V=1"
 echo -e "${BOLD_START}${YELLOW_START}Building hvisor UEFI Boot Image, CMD=$CMD${YELLOW_END}${BOLD_END}"
 $CMD
 
 echo -e "${BOLD_START}${YELLOW_START}Building hvisor shared object built, now building hvisor UEFI Boot Image${YELLOW_END}${BOLD_END}"
 
-OBJCOPY="loongarch64-unknown-linux-gnu-objcopy"
-READELF="loongarch64-unknown-linux-gnu-readelf"
-OBJDUMP="loongarch64-unknown-linux-gnu-objdump"
+OBJCOPY="${ARCH}-unknown-linux-gnu-objcopy"
+READELF="${ARCH}-unknown-linux-gnu-readelf"
+OBJDUMP="${ARCH}-unknown-linux-gnu-objdump"
 TARGET_SO="main/built-in.o"
 TARGET_EFI="hvisor.efi"
 

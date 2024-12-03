@@ -119,57 +119,55 @@ copy:
 	umount $(DEV_PATH)
 	@echo "Done"
 
+# change these to your local source code paths
+HVISOR_SRC_DIR = ../hvisor
+HVISOR_LA64_LINUX_DIR = ../hvisor-la64-linux
+BUILDROOT_DIR = ../buildroot-loongarch64
+HVISOR_TOOL_DIR = ../hvisor-tool
+
+HVISOR_LA64_LINUX_DIR_FULL_PATH = $(shell cd $(HVISOR_LA64_LINUX_DIR) && pwd)
+
 world:
 	unset LD_LIBRARY_PATH
 	
-# @echo "$(LIGHTGREEN_S)building world$(LIGHTGREEN_E)"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> building world"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	
-# @echo "$(LIGHTYELLOW_S)building hvisor kernel module and cmd tool$(LIGHTYELLOW_E)"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> building hvisor kernel module and cmd tool"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd ../hvisor-tool && ./__loongarch_build.sh
-	
-# @echo "$(LIGHTYELLOW_S)copying hvisor kernel module and cmd tool$(LIGHTYELLOW_E)"
+	cd $(HVISOR_TOOL_DIR) && make ARCH=loongarch KDIR=${HVISOR_LA64_LINUX_DIR_FULL_PATH}/linux-6.11.6 all
+
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> copying hvisor kernel module and cmd tool"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool && ./copy
 
-# @echo "$(LIGHTYELLOW_S)building guest os 1$(LIGHTYELLOW_E)"
-# cd ../guest_os_1 && make
-# cp ../guest_os_1/build/guest_os_1.bin ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/guest_os_1.bin
+	cp $(HVISOR_TOOL_DIR)/driver/hvisor.ko $(BUILDROOT_DIR)/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/hvisor.ko
+	cp $(HVISOR_TOOL_DIR)/tools/hvisor $(BUILDROOT_DIR)/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/hvisor
 
-	cd ../hvisor-la64-linux/rootfs && make
+# cd $(HVISOR_LA64_LINUX_DIR)/rootfs && make
 
-# @echo "$(LIGHTYELLOW_S)building nonroot linux kernel$(LIGHTYELLOW_E)"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> building nonroot linux kernel"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd ../hvisor-la64-linux && ./build nonroot
+	cd $(HVISOR_LA64_LINUX_DIR) && ./build nonroot
 
-# @echo "$(LIGHTYELLOW_S)copying nonroot vmlinux.bin to buildroot$(LIGHTYELLOW_E)"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> copying nonroot vmlinux.bin to buildroot"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cp ../hvisor-la64-linux/nr_tmp/vmlinux.bin ../buildroot-loongarch64/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/vmlinux.bin
+	cp $(HVISOR_LA64_LINUX_DIR)/nr_tmp/vmlinux.bin $(BUILDROOT_DIR)/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/vmlinux.bin
 	
-# @echo "$(LIGHTYELLOW_S)building buildroot$(LIGHTYELLOW_E)"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> building buildroot"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd ../buildroot-loongarch64 && make -j$(nproc)
+	cd $(BUILDROOT_DIR) && make -j$(nproc)
 
-# @echo "$(LIGHTYELLOW_S)building root linux kernel$(LIGHTYELLOW_E)"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> building root linux kernel"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd ../hvisor-la64-linux && ./build def && ./build kernel
+	cd $(HVISOR_LA64_LINUX_DIR) && ./build def && ./build kernel
 
-# @echo "$(LIGHTGREEN_S)building world done$(LIGHTGREEN_E)"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> building world done"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"

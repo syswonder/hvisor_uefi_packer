@@ -13,7 +13,7 @@ fi
 ARCH=loongarch64
 # you can change the log level here which will be passed to hvisor makefile
 # trace/debug/info/warn/error
-HVISOR_LOG_LEVEL=info
+HVISOR_LOG_LEVEL=debug
 HVISOR_ARGS="ARCH=${ARCH} LOG=${HVISOR_LOG_LEVEL}"
 
 make -C ${HVISOR_SRC_DIR} ${HVISOR_ARGS}

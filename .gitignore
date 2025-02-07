@@ -132,3 +132,4 @@ hvisor-uefi-img*
 hvisor-uefi-img.efi
 *dis
 !Makefile.lib
+debug

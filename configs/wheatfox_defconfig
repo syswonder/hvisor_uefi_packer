@@ -4,5 +4,5 @@
 #
 CONFIG_TARGET_ARCH_LOONGARCH64=y
 CONFIG_CROSS_COMPILE="loongarch64-unknown-linux-gnu-"
-CONFIG_EMBEDDED_HVISOR_BIN_PATH="../../hvisor/target/loongarch64-unknown-none/debug/hvisor.bin"
-CONFIG_EMBEDDED_VMLINUX_BIN_PATH="../../hvisor-la64-linux/linux-6.9.8/arch/loongarch/boot/vmlinux.bin"
+CONFIG_EMBEDDED_HVISOR_BIN_PATH="../hvisor/target/loongarch64-unknown-none/debug/hvisor.bin"
+CONFIG_EMBEDDED_VMLINUX_BIN_PATH="../hvisor-la64-linux/linux-6.11.6/arch/loongarch/boot/vmlinux.bin"

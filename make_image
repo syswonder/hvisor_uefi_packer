@@ -1,8 +1,10 @@
 #!/bin/bash
-# wheatfox 2024
+# wheatfox 2025
 
-# change to your hvisor source code directory, and use the dev-loongarch branch !
+# !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# change to your hvisor source code directory
 HVISOR_SRC_DIR=../hvisor
+# !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 if [ ! -d ${HVISOR_SRC_DIR} ]; then
     echo "Error: hvisor source code directory not found: ${HVISOR_SRC_DIR}"
@@ -15,8 +17,11 @@ ARCH=loongarch64
 # trace/debug/info/warn/error
 HVISOR_LOG_LEVEL=info
 
-# FEATURES=platform_3a6000yy0121/3a5000
-HVISOR_ARGS="ARCH=${ARCH} LOG=${HVISOR_LOG_LEVEL} FEATURES=platform_3a6000yy0121"
+# you can change the features here which will be passed to hvisor makefile
+# FEATURES=platform_3a5000
+FEATURES=platform_3a6000
+
+HVISOR_ARGS="ARCH=${ARCH} LOG=${HVISOR_LOG_LEVEL} FEATURES=${FEATURES}"
 
 make -C ${HVISOR_SRC_DIR} ${HVISOR_ARGS}
 

@@ -134,3 +134,6 @@ hvisor-uefi-img.efi
 !Makefile.lib
 debug
 compile_commands.json
+
+*.tags
+*.aml

@@ -133,3 +133,4 @@ hvisor-uefi-img.efi
 *dis
 !Makefile.lib
 debug
+compile_commands.json

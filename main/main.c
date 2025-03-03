@@ -182,20 +182,18 @@ EFI_STATUS GetMemoryMapAndExitBootServices(EFI_HANDLE ImageHandle,
 EFI_STATUS
 EFIAPI
 efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
+  // set up 0x8 and 0x9 DMW
+  set_dmw();
+  arch_init();  
+  print_str("[UART0] arch_init done\n");
+
   InitializeLib(ImageHandle, SystemTable);
   Print(L"\n");
   Print(L"Hello! This is the UEFI bootloader of hvisor(loongarch)...\n");
   Print(L"hvisor binary stored in .data, from 0x%lx to 0x%lx\n",
         hvisor_bin_start, hvisor_bin_end);
-  // Print(L"hvisor dtb stored in .data, from 0x%lx to 0x%lx\n", hvisor_dtb_start,
-  //       hvisor_dtb_end);
-
-  // set up 0x8 and 0x9 DMW
-  set_dmw();
-  arch_init();
 
   // the entry is the same as the load address
-
   UINTN hvisor_bin_size = &hvisor_bin_end - &hvisor_bin_start;
   // UINTN hvisor_dtb_size = &hvisor_dtb_end - &hvisor_dtb_start;
   UINTN hvisor_zone0_vmlinux_size =

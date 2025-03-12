@@ -1,9 +1,11 @@
 #!/bin/bash
 # wheatfox 2025
 
+set -e
+
 # !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 # change to your hvisor source code directory
-HVISOR_SRC_DIR=../hvisor
+HVISOR_SRC_DIR=../hvisor-abstract
 # !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 if [ ! -d ${HVISOR_SRC_DIR} ]; then
@@ -13,15 +15,16 @@ if [ ! -d ${HVISOR_SRC_DIR} ]; then
 fi
 
 ARCH=loongarch64
+BOARD=ls3a5000
 # you can change the log level here which will be passed to hvisor makefile
 # trace/debug/info/warn/error
 HVISOR_LOG_LEVEL=info
 
 # you can change the features here which will be passed to hvisor makefile
 # FEATURES=platform_3a5000
-FEATURES=platform_3a6000
+# FEATURES=platform_3a6000
 
-HVISOR_ARGS="ARCH=${ARCH} LOG=${HVISOR_LOG_LEVEL} FEATURES=${FEATURES}"
+HVISOR_ARGS="BID=${ARCH}/${BOARD} LOG=${HVISOR_LOG_LEVEL}"
 
 make -C ${HVISOR_SRC_DIR} ${HVISOR_ARGS}
 

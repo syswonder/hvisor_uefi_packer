@@ -18,6 +18,6 @@ make menuconfig
 
 3. todo
 
-1) vmlinux.bin is used for loongarch with built-in dtb and initramfs, for aarch64 target we may need this logic
+1) vmlinux.bin is used for loongarch with built-in dtb and initramfs, for aarch64 target we may need to change this logic
 
 wheatfox 2025

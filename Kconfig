@@ -10,6 +10,12 @@ config TARGET_ARCH_LOONGARCH64
   default y
   help
     Select this option if you are building for LoongArch64.
+
+config TARGET_ARCH_AARCH64
+  bool "aarch64"
+  help
+    Select this option if you are building for AArch64.
+
 endchoice
 
 config CROSS_COMPILE

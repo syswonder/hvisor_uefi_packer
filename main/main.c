@@ -47,7 +47,21 @@ void halt() {
     ;
 }
 
+#if defined(CONFIG_TARGET_ARCH_AARCH64)
+
+void print_char(char _) {}
+void init_serial() {}
+void set_dmw() {}
+void arch_init() {}
+
+#elif defined(CONFIG_TARGET_ARCH_LOONGARCH64)
+
 void print_char(char c);
+
+#else
+#error "Unsupported target arch"
+#endif
+
 void print_str(const char *str) {
   while (*str) {
     print_char(*str);

@@ -1,0 +1,1 @@
+obj-y += arch/loongarch64/uart.o arch/loongarch64/kernel.o

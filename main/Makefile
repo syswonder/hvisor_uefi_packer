@@ -1,2 +1,9 @@
 obj-y := main.o
-obj-y += uart.o kernel.o data.o
+obj-y += data.o
+
+$(info ARCH is $(ARCH))
+
+# if ARCH=loongarch64, include ./arch/loongarch64/Makefile
+ifeq ($(ARCH),loongarch64)
+include main/arch/loongarch64/Makefile
+endif

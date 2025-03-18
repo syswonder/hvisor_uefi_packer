@@ -4,68 +4,82 @@
 set -e
 
 # !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# change to your hvisor source code directory
-HVISOR_SRC_DIR=../hvisor-abstract
+# Change to your hvisor source code directory
+HVISOR_SRC_DIR=../hvisor
 # !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-if [ ! -d ${HVISOR_SRC_DIR} ]; then
+if [ ! -d "${HVISOR_SRC_DIR}" ]; then
     echo "Error: hvisor source code directory not found: ${HVISOR_SRC_DIR}"
-    echo "Please change the HVISOR_SRC_DIR variable in make_image script to your hvisor source code directory"
+    echo "Please change the HVISOR_SRC_DIR variable in make_image.sh to your hvisor source code directory"
     exit 1
 fi
 
-ARCH=loongarch64
-BOARD=ls3a5000
-# you can change the log level here which will be passed to hvisor makefile
-# trace/debug/info/warn/error
+# Read ARCH and BOARD from environment variables (default values if not set)
+ARCH=${ARCH:-aarch64}  # Default to aarch64 if not provided
+BOARD=${BOARD:-qemu-gicv3}  # Default to qemu-gicv3 if not provided
+
+# Log level (modifiable)
 HVISOR_LOG_LEVEL=info
-
-# you can change the features here which will be passed to hvisor makefile
-# FEATURES=platform_3a5000
-# FEATURES=platform_3a6000
-
 HVISOR_ARGS="BID=${ARCH}/${BOARD} LOG=${HVISOR_LOG_LEVEL}"
 
-make -C ${HVISOR_SRC_DIR} ${HVISOR_ARGS}
+# Make hvisor
+make -C "${HVISOR_SRC_DIR}" ${HVISOR_ARGS}
 
-YELLOW_START="\033[1;33m"
-YELLOW_END="\033[0m"
-GREEN_START="\033[1;32m"
-GREEN_END="\033[0m"
-BOLD_START="\033[1m"
-BOLD_END="\033[0m"
+# ANSI color codes
+YELLOW="\033[1;33m"
+GREEN="\033[1;32m"
+BOLD="\033[1m"
+RESET="\033[0m"
 
-make ARCH=${ARCH} clean
+make ARCH="${ARCH}" clean
 
-cd lib/gnu-efi && ./build.sh
+cd lib/gnu-efi && ./build-"${ARCH}".sh
 cd ../..
 
 CMD="make ARCH=${ARCH} V=1"
-echo -e "${BOLD_START}${YELLOW_START}Building hvisor UEFI Boot Image, CMD=$CMD${YELLOW_END}${BOLD_END}"
+echo -e "${BOLD}${YELLOW}Building hvisor UEFI Boot Image, CMD=$CMD${RESET}"
 $CMD
 
-echo -e "${BOLD_START}${YELLOW_START}Building hvisor shared object built, now building hvisor UEFI Boot Image${YELLOW_END}${BOLD_END}"
+echo -e "${BOLD}${YELLOW}Building hvisor shared object, now building hvisor UEFI Boot Image${RESET}"
 
-OBJCOPY="${ARCH}-unknown-linux-gnu-objcopy"
-READELF="${ARCH}-unknown-linux-gnu-readelf"
-OBJDUMP="${ARCH}-unknown-linux-gnu-objdump"
+# Set the cross-compile tools according to ARCH
+case "${ARCH}" in
+    aarch64)
+        PREFIX="aarch64-linux-gnu-"
+        EFI_NAME="BOOTAA64.EFI"
+        ;;
+    loongarch64)
+        PREFIX="loongarch64-unknown-linux-gnu-"
+        EFI_NAME="BOOTLOONGARCH64.EFI"
+        ;;
+    *)
+        echo "Error: unsupported ARCH: ${ARCH}"
+        exit 1
+        ;;
+esac
+
+OBJCOPY="${PREFIX}objcopy"
+READELF="${PREFIX}readelf"
+OBJDUMP="${PREFIX}objdump"
+
 TARGET_SO="main/built-in.o"
 TARGET_EFI="hvisor.efi"
 
-rm -f hvisor-uefi-img # this is not a valid file to use, just use built-in.o
+rm -f "${EFI_NAME}"  # Remove previous EFI output
 
 CMD2="${OBJCOPY} -j .text -j .sdata -j .data -j .dynamic -j .dynsym -j .rel -j .rela -j .rel.* \
 -j .rela.* -j .rel* -j .rela* -j .reloc -O binary ${TARGET_SO} ${TARGET_EFI}"
-echo -e "${BOLD_START}${YELLOW_START}Building hvisor UEFI Boot Image, CMD=$CMD2${YELLOW_END}${BOLD_END}"
+echo -e "${BOLD}${YELLOW}Building hvisor UEFI Boot Image, CMD=$CMD2${RESET}"
 $CMD2
 
-$READELF -a main/built-in.o >main/built-in.map
-$OBJDUMP -d main/built-in.o >main/built-in.dis
+$READELF -a main/built-in.o > main/built-in.map
+$OBJDUMP -d main/built-in.o > main/built-in.dis
 
-cp ${TARGET_EFI} BOOTLOONGARCH64.EFI
+# Rename output EFI file according to ARCH
+cp "${TARGET_EFI}" "${EFI_NAME}"
 
-# print file info and size of BOOTLOONGARCH64.EFI
-ls -lh BOOTLOONGARCH64.EFI
-file BOOTLOONGARCH64.EFI
+# Print file info and size of generated EFI file
+ls -lh "${EFI_NAME}"
+file "${EFI_NAME}"
 
-echo -e "${BOLD_START}${GREEN_START}Building hvisor UEFI Boot Image done${GREEN_END}${BOLD_END}"
+echo -e "${BOLD}${GREEN}Building hvisor UEFI Boot Image done${RESET}"

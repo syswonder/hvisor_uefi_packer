@@ -274,7 +274,7 @@ GNU_EFI_LIB    = $(GNU_EFI)/$(ARCH)/gnuefi
 GNU_EFI_LIB2   = $(GNU_EFI)/$(ARCH)/lib
 GNU_EFI_CRT0   = $(GNU_EFI_LIB)/crt0-efi-$(ARCH).o
 GNU_EFI_LDS    = $(GNU_EFI)/gnuefi/elf_$(ARCH)_efi.lds
-GNU_EFI_CFLAGS = $(GNU_EFI_INCS) -fno-stack-protector -fpic -fshort-wchar -Wall -march=$(ARCH) -mabi=lp64d -g -Os -Wextra -fno-strict-aliasing -ffreestanding -fno-stack-check
+GNU_EFI_CFLAGS = $(GNU_EFI_INCS) -fno-stack-protector -fpic -fshort-wchar -Wall -g -Os -Wextra -fno-strict-aliasing -ffreestanding -fno-stack-check
 GNU_EFI_LDFLAGS = -nostdlib --no-undefined -shared \
 				--build-id=sha1 -Bsymbolic --defsym=EFI_SUBSYSTEM=0xa -T $(GNU_EFI_LDS) -L $(GNU_EFI_LIB) -L $(GNU_EFI_LIB2) $(GNU_EFI_CRT0)
 

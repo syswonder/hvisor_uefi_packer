@@ -1,5 +1,23 @@
 hvisor UEFI Image Packer
 
-currently for loongarch64 only
+1. build instruction
 
-wheatfox 2024
+1) update HVISOR_SRC in make_image
+2) set the paths and options in menuconfig:
+
+make menuconfig
+
+3) run:
+
+./make_image
+
+2. features
+
+1) support loongarch64 and aarch64 target UEFI image generation
+2) packing hvisor.bin and vmlinux.bin
+
+3. todo
+
+1) vmlinux.bin is used for loongarch with built-in dtb and initramfs, for aarch64 target we may need this logic
+
+wheatfox 2025

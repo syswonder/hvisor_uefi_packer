@@ -154,6 +154,16 @@ char *get_efi_status_string(EFI_STATUS status) {
   return "UNKNOWN";
 }
 
+char *get_arch() {
+#if defined(CONFIG_TARGET_ARCH_AARCH64)
+  return "aarch64";
+#elif defined(CONFIG_TARGET_ARCH_LOONGARCH64)
+  return "loongarch64";
+#else
+#error "Unsupported target arch"
+#endif
+}
+
 void check(EFI_STATUS status, const char *prefix, EFI_STATUS expected,
            EFI_SYSTEM_TABLE *SystemTable) {
   if (status != expected) {
@@ -373,8 +383,11 @@ EFI_STATUS acpi_dump(EFI_SYSTEM_TABLE *SystemTable) {
 EFI_STATUS
 EFIAPI
 efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
-  // set up 0x8 and 0x9 DMW
-  set_dmw();
+
+#if defined(CONFIG_TARGET_ARCH_LOONGARCH64)
+  set_dmw(); // set up 0x8 and 0x9 DMW
+#endif
+
   arch_init();
 
   print_str("\n\r");
@@ -383,7 +396,8 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   InitializeLib(ImageHandle, SystemTable);
   Print(L"[INFO] UEFI bootloader initialized!\n");
   // Print(L"\n");
-  Print(L"[INFO] Hello! This is the UEFI bootloader of hvisor(loongarch)\n");
+  Print(L"[INFO] Hello! This is the UEFI bootloader of hvisor, arch = %a\n",
+        get_arch());
   Print(L"[INFO] hvisor binary stored in .data, from 0x%lx to 0x%lx\n",
         hvisor_bin_start, hvisor_bin_end);
 
@@ -401,15 +415,24 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   UINTN hvisor_zone0_vmlinux_size =
       &hvisor_zone0_vmlinux_end - &hvisor_zone0_vmlinux_start;
 
+  // TODO: add to Kconfig
+#if defined(CONFIG_TARGET_ARCH_LOONGARCH64)
   const UINTN hvisor_bin_addr = 0x9000000100010000ULL;
-  // const UINTN hvisor_dtb_addr = 0x900000010000f000ULL;
   const UINTN hvisor_zone0_vmlinux_addr =
       0x9000000000200000ULL; // caution: this is actually a vmlinux.bin, not a
                              // vmlinux - wheatfox
-
   const UINTN memset_st = 0x9000000100000000ULL;
   const UINTN memset_ed = 0x9000000101000000ULL;
+  const UINTN memset2_st = 0x9000000000000000ULL + 0x1000;
+  const UINTN memset2_size = 0x10000;
+#elif defined(CONFIG_TARGET_ARCH_AARCH64)
+  const UINTN hvisor_bin_addr = 0x40000000;
+  const UINTN hvisor_zone0_vmlinux_addr = 0x40200000;
+#else
+#error "Unsupported target arch"
+#endif
 
+#if defined(CONFIG_TARGET_ARCH_LOONGARCH64)
   Print(L"[INFO] clearing memory from 0x%lx to 0x%lx\n", memset_st, memset_ed);
   memset2((void *)memset_st, 0, memset_ed - memset_st);
   // check memset
@@ -419,19 +442,16 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
       halt();
     }
   }
-  const UINTN memset2_st = 0x9000000000000000ULL + 0x1000;
-  const UINTN memset2_size = 0x10000;
   Print(L"[INFO] clearing memory from 0x%lx to 0x%lx\n", memset2_st,
         memset2_st + memset2_size);
   memset2((void *)memset2_st, 0, memset2_size);
+#endif
 
-  // print range overview
   Print(L"====================================================================="
         L"==========\n");
+  Print(L"hvisor uefi packer target arch:\t\t%a\n", get_arch());
   Print(L"hvisor binary range:\t\t\t0x%lx - 0x%lx\n", hvisor_bin_addr,
         hvisor_bin_addr + hvisor_bin_size);
-  // Print(L"hvisor dtb range:\t\t\t0x%lx - 0x%lx\n", hvisor_dtb_addr,
-  //       hvisor_dtb_addr + hvisor_dtb_size);
   Print(L"hvisor vmlinux.bin :\t\t\t0x%lx - 0x%lx\n", hvisor_zone0_vmlinux_addr,
         hvisor_zone0_vmlinux_addr + hvisor_zone0_vmlinux_size);
   Print(L"====================================================================="

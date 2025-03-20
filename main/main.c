@@ -49,10 +49,29 @@ void halt() {
 
 #if defined(CONFIG_TARGET_ARCH_AARCH64)
 
-void print_char(char _) {}
+// PL011 UART registers
+#define UART_BASE 0x9000000
+#define UART_FR 0x18          // Flag register
+#define UART_FR_TXFF (1 << 5) // Transmit FIFO full
+#define UART_DR 0x00          // Data register
+
+static inline void mmio_write(uint64_t reg, uint32_t val) {
+  *(volatile uint32_t *)(reg) = val;
+}
+
+static inline uint32_t mmio_read(uint64_t reg) {
+  return *(volatile uint32_t *)(reg);
+}
+
+void print_char(char c) {
+  while (mmio_read(UART_BASE + UART_FR) & UART_FR_TXFF)
+    ;
+  mmio_write(UART_BASE + UART_DR, c);
+}
+
+void arch_init() {}
 void init_serial() {}
 void set_dmw() {}
-void arch_init() {}
 
 #elif defined(CONFIG_TARGET_ARCH_LOONGARCH64)
 
@@ -68,6 +87,7 @@ void print_str(const char *str) {
     str++;
   }
 }
+
 void print_hex(UINT8 n) {
   UINT8 c = n >> 4;
   print_char(c > 9 ? c - 10 + 'A' : c + '0');
@@ -178,8 +198,8 @@ void check(EFI_STATUS status, const char *prefix, EFI_STATUS expected,
   Print(L"[INFO] (check) %a success\n", prefix);
 }
 
-EFI_STATUS exit_boot_servies(EFI_HANDLE ImageHandle,
-                             EFI_SYSTEM_TABLE *SystemTable) {
+EFI_STATUS exit_boot_services(EFI_HANDLE ImageHandle,
+                              EFI_SYSTEM_TABLE *SystemTable) {
   EFI_STATUS status;
   // get memory map
   memory_map_size = 0;
@@ -189,14 +209,15 @@ EFI_STATUS exit_boot_servies(EFI_HANDLE ImageHandle,
                              &desc_size, &desc_version);
 
   check(status, "GetMemoryMap (1st call)", EFI_BUFFER_TOO_SMALL, SystemTable);
-  Print(L"[INFO] (exit_boot_servies) memory_map_size = %ld\n", memory_map_size);
+  Print(L"[INFO] (exit_boot_services) memory_map_size = %ld\n",
+        memory_map_size);
 
   memory_map_size += 20 * desc_size;
   status = uefi_call_wrapper(SystemTable->BootServices->AllocatePool, 3,
                              EfiLoaderData, memory_map_size,
                              (void **)&memory_map_desc);
   if (memory_map_desc == NULL) {
-    Print(L"[ERROR] (exit_boot_servies) AllocatePool failed\n");
+    Print(L"[ERROR] (exit_boot_services) AllocatePool failed\n");
     halt();
   }
 
@@ -223,6 +244,7 @@ void print_chars(char *c, int n) {
 // it should begin with "DSDT" because the
 // whole DSDT table should be an "AML code"
 void parse_aml(char *aml, int size) {
+  return;
   print_str("[INFO] (parse_aml) dumping AML code to UART:\n");
   // writing a parser for AML is very complex
   // we just dump each byte as hex
@@ -384,6 +406,8 @@ EFI_STATUS
 EFIAPI
 efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
+  EFI_STATUS status;
+
 #if defined(CONFIG_TARGET_ARCH_LOONGARCH64)
   set_dmw(); // set up 0x8 and 0x9 DMW
 #endif
@@ -400,6 +424,8 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
         get_arch());
   Print(L"[INFO] hvisor binary stored in .data, from 0x%lx to 0x%lx\n",
         hvisor_bin_start, hvisor_bin_end);
+  Print(L"[INFO] CONFIG_EMBEDDED_HVISOR_BIN_PATH: %a\n",
+        CONFIG_EMBEDDED_HVISOR_BIN_PATH);
 
   Print(L"[INFO] runtime services addr: 0x%lx\n", SystemTable->RuntimeServices);
   Print(L"[INFO] boot services addr: 0x%lx\n", SystemTable->BootServices);
@@ -426,8 +452,8 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   const UINTN memset2_st = 0x9000000000000000ULL + 0x1000;
   const UINTN memset2_size = 0x10000;
 #elif defined(CONFIG_TARGET_ARCH_AARCH64)
-  const UINTN hvisor_bin_addr = 0x40000000;
-  const UINTN hvisor_zone0_vmlinux_addr = 0x40200000;
+  const UINTN hvisor_bin_addr = 0x40400000;
+  const UINTN hvisor_zone0_vmlinux_addr = 0xa0400000;
 #else
 #error "Unsupported target arch"
 #endif
@@ -457,22 +483,41 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   Print(L"====================================================================="
         L"==========\n");
 
-  EFI_STATUS status;
-  status = exit_boot_servies(ImageHandle, SystemTable);
+  // dump first 8 instructions of hvisor binary
+  // 0x12345677 0x00001234 ...
+  for (int i = 0; i < 8; i++) {
+    Print(L"0x%08x ", ((UINT32 *)hvisor_bin_start)[i]);
+  }
+  Print(L"\n");
 
   // now we have exited boot services
   memcpy2((void *)hvisor_bin_addr, (void *)hvisor_bin_start, hvisor_bin_size);
+  Print(L"[INFO] hvisor binary copied\n");
+
   // memcpy2((void *)hvisor_dtb_addr, (void *)hvisor_dtb_start,
   // hvisor_dtb_size);
+#ifndef CONFIG_TARGET_ARCH_AARCH64
   memcpy2((void *)hvisor_zone0_vmlinux_addr, (void *)hvisor_zone0_vmlinux_start,
           hvisor_zone0_vmlinux_size);
+  Print(L"[INFO] hvisor vmlinux.bin copied\n");
+#endif
+
+  status = exit_boot_services(ImageHandle, SystemTable);
+  print_str("[INFO] exit_boot_services done!\n");
 
   init_serial();
-  print_str("[INFO] Ok, ready to jump to hvisor entry...\n");
 
-  //  place dtb addr in r5
-  // as constant
-  // asm volatile("li.d $r5, %0" ::"i"(hvisor_dtb_addr));
+#ifdef CONFIG_TARGET_ARCH_AARCH64
+  // according to UEFI manual, aarch64 UEFI firmware will
+  // use the highest non-secure EL to execute (non-secure EL1/EL2, no EL3) -
+  // wheatfox 2025.3.20
+  __asm__ volatile("mrs x0, sctlr_el2\n"
+                   "bic x0, x0, #1\n" // Clear M bit
+                   "msr sctlr_el2, x0\n"
+                   "isb\n");
+#endif
+
+  print_str("[INFO] ok, ready to jump to hvisor entry...\n");
 
   void *hvisor_entry = (void *)hvisor_bin_addr;
   ((void (*)(void))hvisor_entry)();

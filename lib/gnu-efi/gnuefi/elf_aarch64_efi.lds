@@ -16,6 +16,7 @@ SECTIONS
   _etext = .;
   _text_size = . - _text;
   .dynamic  : { *(.dynamic) }
+   
   .data : ALIGN(4096)
   {
    _data = .;
@@ -25,6 +26,8 @@ SECTIONS
    *(.data.*)
    *(.got.plt)
    *(.got)
+
+   *(.hvisor.*)
 
    /* the EFI loader doesn't seem to like a .bss section, so we stick
       it all into .data: */

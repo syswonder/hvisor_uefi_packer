@@ -5,5 +5,5 @@
 # CONFIG_TARGET_ARCH_LOONGARCH64 is not set
 CONFIG_TARGET_ARCH_AARCH64=y
 CONFIG_CROSS_COMPILE="aarch64-linux-gnu-"
-CONFIG_EMBEDDED_HVISOR_BIN_PATH="../hvisor/target/aarch64-unknown-none/debug/hvisor.bin"
-CONFIG_EMBEDDED_VMLINUX_BIN_PATH="../hvisor-la64-linux/linux-6.11.6/arch/loongarch/boot/vmlinux.bin"
+CONFIG_EMBEDDED_HVISOR_BIN_PATH="../hvisor/target/aarch64-unknown-none/debug/hvisor.bin.tmp"
+CONFIG_EMBEDDED_VMLINUX_BIN_PATH="./README"

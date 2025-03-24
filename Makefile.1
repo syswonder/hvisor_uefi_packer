@@ -137,7 +137,7 @@ world:
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> building hvisor kernel module and cmd tool"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd $(HVISOR_TOOL_DIR) && make ARCH=loongarch KDIR=${HVISOR_LA64_LINUX_DIR_FULL_PATH}/linux-6.11.6 all
+	cd $(HVISOR_TOOL_DIR) && make ARCH=loongarch KDIR=${HVISOR_LA64_LINUX_DIR_FULL_PATH}/linux-6.13.7 all
 
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> copying hvisor kernel module and cmd tool"

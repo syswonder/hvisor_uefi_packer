@@ -18,7 +18,7 @@ fi
 ARCH=${ARCH:-aarch64}  # Default to aarch64 if not provided
 BOARD=${BOARD:-qemu-gicv3}  # Default to qemu-gicv3 if not provided
 
-# Log level (modifiable)
+# Log level - error, warn, info, debug, trace
 HVISOR_LOG_LEVEL=info
 HVISOR_ARGS="BID=${ARCH}/${BOARD} LOG=${HVISOR_LOG_LEVEL}"
 

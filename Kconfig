@@ -25,14 +25,14 @@ config CROSS_COMPILE
     Prefix for the cross compiler.
 
 config EMBEDDED_HVISOR_BIN_PATH
-  string "Path to the embedded hvisor.bin"
+  string "Path to the embedded hvisor.bin (binary striped from ELF)"
   default "hvisor.bin"
   help
-    Path to the embedded hvisor.bin file.
+    Path to the embedded hvisor.bin file. Don't use any u-boot image binary here. Just use the raw "binary" file stripped from ELF.
 
-config EMBEDDED_VMLINUX_BIN_PATH
-  string "Path to the embedded vmlinux.bin"
-  default "vmlinux.bin"
+config EMBEDDED_VMLINUX_PATH
+  string "Path to the embedded vmlinux.efi (hvisor uefi packer is porting to support EFI image only)"
+  default "vmlinux.efi"
   help
     Path to the embedded vmlinux.bin file.
 

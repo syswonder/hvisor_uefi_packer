@@ -15,8 +15,8 @@ if [ ! -d "${HVISOR_SRC_DIR}" ]; then
 fi
 
 # Read ARCH and BOARD from environment variables (default values if not set)
-ARCH=${ARCH:-aarch64}  # Default to aarch64 if not provided
-BOARD=${BOARD:-qemu-gicv3}  # Default to qemu-gicv3 if not provided
+ARCH=${ARCH:-loongarch64}
+BOARD=${BOARD:-ls3a5000}
 
 # Log level - error, warn, info, debug, trace
 HVISOR_LOG_LEVEL=info
@@ -36,7 +36,8 @@ make ARCH="${ARCH}" clean
 cd lib/gnu-efi && ./build-"${ARCH}".sh
 cd ../..
 
-CMD="make ARCH=${ARCH} V=1"
+VERBOSE=0
+CMD="make ARCH=${ARCH} V=${VERBOSE}"
 echo -e "${BOLD}${YELLOW}Building hvisor UEFI Boot Image, CMD=$CMD${RESET}"
 $CMD
 

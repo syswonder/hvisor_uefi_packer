@@ -9,5 +9,5 @@ hvisor_bin_end:
 .section .hvisor.zone0_vmlinux
 .globl hvisor_zone0_vmlinux_start, hvisor_zone0_vmlinux_end
 hvisor_zone0_vmlinux_start:
-.incbin CONFIG_EMBEDDED_VMLINUX_BIN_PATH
+.incbin CONFIG_EMBEDDED_VMLINUX_PATH
 hvisor_zone0_vmlinux_end:

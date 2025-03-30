@@ -1,5 +1,5 @@
 obj-y := main.o
-obj-y += data.o
+obj-y += data.o core.o acpi.o
 
 $(info ARCH is $(ARCH))
 

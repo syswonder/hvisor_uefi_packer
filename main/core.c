@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 wheatfox
+ * Copyright 2025 Syswonder
  * SPDX-License-Identifier: MulanPSL-2.0
  */
 
@@ -23,7 +23,7 @@ void memset2(void *dest, int val, int n) {
 }
 
 void halt() {
-  Print(L"[INFO] (halt) loop forever\n");
+  Print(L"[INFO] halt: halting system\n");
   while (1)
     ;
 }
@@ -170,13 +170,13 @@ void check(EFI_STATUS status, const char *prefix, EFI_STATUS expected,
   if (status != expected) {
     uefi_call_wrapper(SystemTable->ConOut->SetAttribute, 2, SystemTable->ConOut,
                       EFI_LIGHTRED);
-    Print(L"[ERROR] (check) %a failed, should be %a, but got %a\n", prefix,
+    Print(L"[ERROR] check: %a failed, should be %a, but got %a\n", prefix,
           get_efi_status_string(expected), get_efi_status_string(status));
     uefi_call_wrapper(SystemTable->ConOut->SetAttribute, 2, SystemTable->ConOut,
                       EFI_LIGHTGRAY);
     halt();
   }
-  Print(L"[INFO] (check) %a success\n", prefix);
+  Print(L"[INFO] check: %a success\n", prefix);
 }
 
 void print_chars(char *c, int n) {

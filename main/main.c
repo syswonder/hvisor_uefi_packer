@@ -1,8 +1,9 @@
-// Copyright (C) 2025 Syswonder
+// Copyright 2025 Syswonder
 // SPDX-License-Identifier: MulanPSL-2.0
 
 #include "acpi.h"
 #include "core.h"
+#include "parse.h"
 
 EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
 EFI_SYSTEM_TABLE *g_st;
@@ -23,15 +24,14 @@ EFI_STATUS exit_boot_services(EFI_HANDLE ImageHandle,
                              &desc_size, &desc_version);
 
   check(status, "GetMemoryMap (1st call)", EFI_BUFFER_TOO_SMALL, SystemTable);
-  Print(L"[INFO] (exit_boot_services) memory_map_size = %ld\n",
-        memory_map_size);
+  Print(L"[INFO] exit_boot_services: memory_map_size = %ld\n", memory_map_size);
 
   memory_map_size += 20 * desc_size;
   status = uefi_call_wrapper(SystemTable->BootServices->AllocatePool, 3,
                              EfiLoaderData, memory_map_size,
                              (void **)&memory_map_desc);
   if (memory_map_desc == NULL) {
-    Print(L"[ERROR] (exit_boot_services) AllocatePool failed\n");
+    Print(L"[ERROR] exit_boot_services: AllocatePool failed !!!\n");
     halt();
   }
 
@@ -67,8 +67,6 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
         get_arch());
   Print(L"[INFO] hvisor binary stored in .data, from 0x%lx to 0x%lx\n",
         hvisor_bin_start, hvisor_bin_end);
-  Print(L"[INFO] CONFIG_EMBEDDED_HVISOR_BIN_PATH: %a\n",
-        CONFIG_EMBEDDED_HVISOR_BIN_PATH);
 
   Print(L"[INFO] runtime services addr: 0x%lx\n", SystemTable->RuntimeServices);
   Print(L"[INFO] boot services addr: 0x%lx\n", SystemTable->BootServices);
@@ -84,6 +82,7 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   UINTN hvisor_zone0_vmlinux_size =
       &hvisor_zone0_vmlinux_end - &hvisor_zone0_vmlinux_start;
 
+  UINTN hvisor_zone0_vmlinux_start_addr = (UINTN)&hvisor_zone0_vmlinux_start;
   // TODO: add to Kconfig or clean up code structure
   // this is a total mess ...
 #if defined(CONFIG_TARGET_ARCH_LOONGARCH64)
@@ -96,7 +95,7 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   const UINTN memset2_size = 0x10000;
 
   // UEFI image parsing and loading
-  const UINTN hvisor_zone0_vmlinux_efi_load_addr = 0x9000000300000000ULL;
+  const UINTN hvisor_zone0_vmlinux_efi_load_addr = 0x9000000100000000ULL;
   UINTN hvisor_zone0_vmlinux_efi_entry_addr;
 
 #elif defined(CONFIG_TARGET_ARCH_AARCH64)
@@ -109,18 +108,36 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 #endif
 
 #if defined(CONFIG_TARGET_ARCH_LOONGARCH64)
+
   Print(L"[INFO] clearing memory from 0x%lx to 0x%lx\n", memset_st, memset_ed);
   memset2((void *)memset_st, 0, memset_ed - memset_st);
   // check memset
   for (UINTN i = memset_st; i < memset_ed; i++) {
     if (*(UINT8 *)i != 0) {
-      Print(L"memset failed at 0x%lx\n", i);
+      Print(L"memset failed at 0x%lx !!!\n", i);
       halt();
     }
   }
   Print(L"[INFO] clearing memory from 0x%lx to 0x%lx\n", memset2_st,
         memset2_st + memset2_size);
   memset2((void *)memset2_st, 0, memset2_size);
+
+  // 1. parse vmlinux.efi, get the offset of entry point
+  // 2. load sections to hvisor_zone0_vmlinux_efi_load_addr (EFI image is PIC
+  // code so we can load it to anywhere)
+  // 3. later jump to entry
+
+  hvisor_zone0_vmlinux_efi_entry_addr = parse_pe(
+      hvisor_zone0_vmlinux_start_addr, hvisor_zone0_vmlinux_efi_load_addr,
+      hvisor_zone0_vmlinux_size); // parse vmlinux.efi and get entry addr
+  if (hvisor_zone0_vmlinux_efi_entry_addr == 0) {
+    Print(L"[ERROR] parse_pe failed !!!\n");
+    halt();
+  } else {
+    Print(L"[INFO] parse_pe done, entry addr = 0x%lx\n",
+          hvisor_zone0_vmlinux_efi_entry_addr);
+  }
+
 #endif
 
   Print(L"====================================================================="
@@ -153,7 +170,7 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 #endif
 
   status = exit_boot_services(ImageHandle, SystemTable);
-  print_str("[INFO] exit_boot_services done!\n");
+  print_str("[INFO] exit_boot_services done\n");
 
   init_serial();
 

@@ -1,4 +1,4 @@
-# Copyright 2025 wheatfox
+# Copyright 2025 Syswonder
 # SPDX-License-Identifier: MulanPSL-2.0
 
 qemu-system-loongarch64 -machine virt -smp 4 -m 4G -nographic \

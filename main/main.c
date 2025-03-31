@@ -185,8 +185,16 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
   print_str("[INFO] ok, ready to jump to hvisor entry...\n");
 
-  void *hvisor_entry = (void *)hvisor_bin_addr;
-  ((void (*)(void))hvisor_entry)();
+  // void hvisor_entry(usize cpuid, usize dtb_addr/system_table, usize
+  // entry_addr)
+
+  UINTN system_table = (UINTN)SystemTable;
+
+  void (*hvisor_entry)(UINTN, UINTN, UINTN) =
+      (void (*)(UINTN, UINTN, UINTN))hvisor_bin_addr;
+
+  // jump to hvisor entry
+  hvisor_entry(0, system_table, hvisor_zone0_vmlinux_efi_entry_addr);
 
   while (1) {
   }

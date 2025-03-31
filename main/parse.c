@@ -69,27 +69,27 @@ UINTN parse_pe(UINTN efi_file_start_addr, UINTN efi_load_addr, UINTN efi_size) {
   IMAGE_OPTIONAL_HEADER *optional_header = &nt_header->OptionalHeader;
 
   // dump file header
-  Print(L"[INFO] parse_pe: file header:\n");
-  Print(L"[INFO] parse_pe:   Machine = 0x%x\n", file_header->Machine);
-  Print(L"[INFO] parse_pe:   NumberOfSections = %d\n",
-        file_header->NumberOfSections);
-  Print(L"[INFO] parse_pe:   TimeDateStamp = %d\n", file_header->TimeDateStamp);
-  Print(L"[INFO] parse_pe:   PointerToSymbolTable = %d\n",
-        file_header->PointerToSymbolTable);
-  Print(L"[INFO] parse_pe:   NumberOfSymbols = %d\n",
-        file_header->NumberOfSymbols);
-  Print(L"[INFO] parse_pe:   SizeOfOptionalHeader = %d\n",
-        file_header->SizeOfOptionalHeader);
-  Print(L"[INFO] parse_pe:   Characteristics = 0x%x\n",
-        file_header->Characteristics);
+//   Print(L"[INFO] parse_pe: file header:\n");
+//   Print(L"[INFO] parse_pe:   Machine = 0x%x\n", file_header->Machine);
+//   Print(L"[INFO] parse_pe:   NumberOfSections = %d\n",
+//         file_header->NumberOfSections);
+//   Print(L"[INFO] parse_pe:   TimeDateStamp = %d\n", file_header->TimeDateStamp);
+//   Print(L"[INFO] parse_pe:   PointerToSymbolTable = %d\n",
+//         file_header->PointerToSymbolTable);
+//   Print(L"[INFO] parse_pe:   NumberOfSymbols = %d\n",
+//         file_header->NumberOfSymbols);
+//   Print(L"[INFO] parse_pe:   SizeOfOptionalHeader = %d\n",
+//         file_header->SizeOfOptionalHeader);
+//   Print(L"[INFO] parse_pe:   Characteristics = 0x%x\n",
+//         file_header->Characteristics);
 
   // dump optional header
   Print(L"[INFO] parse_pe: optional header:\n");
-  Print(L"[INFO] parse_pe:   Magic = 0x%x\n", optional_header->Magic);
-  Print(L"[INFO] parse_pe:   MajorLinkerVersion = %d\n",
-        optional_header->MajorLinkerVersion);
-  Print(L"[INFO] parse_pe:   MinorLinkerVersion = %d\n",
-        optional_header->MinorLinkerVersion);
+//   Print(L"[INFO] parse_pe:   Magic = 0x%x\n", optional_header->Magic);
+//   Print(L"[INFO] parse_pe:   MajorLinkerVersion = %d\n",
+//         optional_header->MajorLinkerVersion);
+//   Print(L"[INFO] parse_pe:   MinorLinkerVersion = %d\n",
+//         optional_header->MinorLinkerVersion);
   Print(L"[INFO] parse_pe:   SizeOfCode = %d\n", optional_header->SizeOfCode);
   Print(L"[INFO] parse_pe:   SizeOfInitializedData = %d\n",
         optional_header->SizeOfInitializedData);
@@ -100,14 +100,14 @@ UINTN parse_pe(UINTN efi_file_start_addr, UINTN efi_load_addr, UINTN efi_size) {
   Print(L"[INFO] parse_pe:   BaseOfCode = 0x%lx\n",
         optional_header->BaseOfCode);
   Print(L"[INFO] parse_pe:   ImageBase = 0x%lx\n", optional_header->ImageBase);
-  Print(L"[INFO] parse_pe:   SectionAlignment = 0x%lx\n",
-        optional_header->SectionAlignment);
-  Print(L"[INFO] parse_pe:   FileAlignment = 0x%lx\n",
-        optional_header->FileAlignment);
-  // SizeOfImage
-  Print(L"[INFO] parse_pe:   SizeOfImage = %d\n", optional_header->SizeOfImage);
-  Print(L"[INFO] parse_pe:   SizeOfHeaders = %d\n",
-        optional_header->SizeOfHeaders);
+//   Print(L"[INFO] parse_pe:   SectionAlignment = 0x%lx\n",
+//         optional_header->SectionAlignment);
+//   Print(L"[INFO] parse_pe:   FileAlignment = 0x%lx\n",
+//         optional_header->FileAlignment);
+//   // SizeOfImage
+//   Print(L"[INFO] parse_pe:   SizeOfImage = %d\n", optional_header->SizeOfImage);
+//   Print(L"[INFO] parse_pe:   SizeOfHeaders = %d\n",
+//         optional_header->SizeOfHeaders);
 
   UINTN entry = optional_header->AddressOfEntryPoint + efi_load_addr;
 
@@ -126,18 +126,18 @@ UINTN parse_pe(UINTN efi_file_start_addr, UINTN efi_load_addr, UINTN efi_size) {
           section_header[i].VirtualAddress);
     Print(L"[INFO] parse_pe:     SizeOfRawData = %d\n",
           section_header[i].SizeOfRawData);
-    Print(L"[INFO] parse_pe:     PointerToRawData = %d\n",
-          section_header[i].PointerToRawData);
-    Print(L"[INFO] parse_pe:     PointerToRelocations = %d\n",
-          section_header[i].PointerToRelocations);
-    Print(L"[INFO] parse_pe:     PointerToLinenumbers = %d\n",
-          section_header[i].PointerToLinenumbers);
-    Print(L"[INFO] parse_pe:     NumberOfRelocations = %d\n",
-          section_header[i].NumberOfRelocations);
-    Print(L"[INFO] parse_pe:     NumberOfLinenumbers = %d\n",
-          section_header[i].NumberOfLinenumbers);
-    Print(L"[INFO] parse_pe:     Characteristics = 0x%x\n",
-          section_header[i].Characteristics);
+//     Print(L"[INFO] parse_pe:     PointerToRawData = %d\n",
+//           section_header[i].PointerToRawData);
+//     Print(L"[INFO] parse_pe:     PointerToRelocations = %d\n",
+//           section_header[i].PointerToRelocations);
+//     Print(L"[INFO] parse_pe:     PointerToLinenumbers = %d\n",
+//           section_header[i].PointerToLinenumbers);
+//     Print(L"[INFO] parse_pe:     NumberOfRelocations = %d\n",
+//           section_header[i].NumberOfRelocations);
+//     Print(L"[INFO] parse_pe:     NumberOfLinenumbers = %d\n",
+//           section_header[i].NumberOfLinenumbers);
+//     Print(L"[INFO] parse_pe:     Characteristics = 0x%x\n",
+//           section_header[i].Characteristics);
     // load this section to memory @ efi_load_addr +
     // section_header[i].VirtualAddress
     UINTN section_start =

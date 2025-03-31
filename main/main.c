@@ -74,7 +74,7 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   Print(L"[INFO] con in addr: 0x%lx\n", SystemTable->ConIn);
   Print(L"[INFO] con out addr: 0x%lx\n", SystemTable->ConOut);
 
-  acpi_dump(SystemTable);
+  // acpi_dump(SystemTable);
 
   // the entry is the same as the load address
   UINTN hvisor_bin_size = &hvisor_bin_end - &hvisor_bin_start;
@@ -95,7 +95,7 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   const UINTN memset2_size = 0x10000;
 
   // UEFI image parsing and loading
-  const UINTN hvisor_zone0_vmlinux_efi_load_addr = 0x9000000100000000ULL;
+  const UINTN hvisor_zone0_vmlinux_efi_load_addr = 0x9000000120000000ULL;
   UINTN hvisor_zone0_vmlinux_efi_entry_addr;
 
 #elif defined(CONFIG_TARGET_ARCH_AARCH64)
@@ -127,16 +127,16 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   // code so we can load it to anywhere)
   // 3. later jump to entry
 
-  hvisor_zone0_vmlinux_efi_entry_addr = parse_pe(
-      hvisor_zone0_vmlinux_start_addr, hvisor_zone0_vmlinux_efi_load_addr,
-      hvisor_zone0_vmlinux_size); // parse vmlinux.efi and get entry addr
-  if (hvisor_zone0_vmlinux_efi_entry_addr == 0) {
-    Print(L"[ERROR] parse_pe failed !!!\n");
-    halt();
-  } else {
-    Print(L"[INFO] parse_pe done, entry addr = 0x%lx\n",
-          hvisor_zone0_vmlinux_efi_entry_addr);
-  }
+  // hvisor_zone0_vmlinux_efi_entry_addr = parse_pe(
+  //     hvisor_zone0_vmlinux_start_addr, hvisor_zone0_vmlinux_efi_load_addr,
+  //     hvisor_zone0_vmlinux_size); // parse vmlinux.efi and get entry addr
+  // if (hvisor_zone0_vmlinux_efi_entry_addr == 0) {
+  //   Print(L"[ERROR] parse_pe failed !!!\n");
+  //   halt();
+  // } else {
+  //   Print(L"[INFO] parse_pe done, entry addr = 0x%lx\n",
+  //         hvisor_zone0_vmlinux_efi_entry_addr);
+  // }
 
 #endif
 
@@ -169,8 +169,8 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   Print(L"[INFO] hvisor vmlinux.bin copied\n");
 #endif
 
-  status = exit_boot_services(ImageHandle, SystemTable);
-  print_str("[INFO] exit_boot_services done\n");
+  // status = exit_boot_services(ImageHandle, SystemTable);
+  // print_str("[INFO] exit_boot_services done\n");
 
   init_serial();
 
@@ -194,7 +194,7 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
       (void (*)(UINTN, UINTN, UINTN))hvisor_bin_addr;
 
   // jump to hvisor entry
-  hvisor_entry(0, system_table, hvisor_zone0_vmlinux_efi_entry_addr);
+  hvisor_entry(0, system_table, 0);
 
   while (1) {
   }

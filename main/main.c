@@ -169,8 +169,8 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   Print(L"[INFO] hvisor vmlinux.bin copied\n");
 #endif
 
-  // status = exit_boot_services(ImageHandle, SystemTable);
-  // print_str("[INFO] exit_boot_services done\n");
+  status = exit_boot_services(ImageHandle, SystemTable);
+  print_str("[INFO] exit_boot_services done\n");
 
   init_serial();
 

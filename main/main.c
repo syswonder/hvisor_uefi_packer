@@ -173,28 +173,12 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   print_str("[INFO] exit_boot_services done\n");
 
   init_serial();
-
-#ifdef CONFIG_TARGET_ARCH_AARCH64
-  // according to UEFI manual, aarch64 UEFI firmware will
-  // use the highest non-secure EL to execute (non-secure EL1/EL2, but no EL3)
-  __asm__ volatile("mrs x0, sctlr_el2\n"
-                   "bic x0, x0, #1\n" // Clear M bit
-                   "msr sctlr_el2, x0\n"
-                   "isb\n");
-#endif
-
   print_str("[INFO] ok, ready to jump to hvisor entry...\n");
-
-  // void hvisor_entry(usize cpuid, usize dtb_addr/system_table, usize
-  // entry_addr)
 
   UINTN system_table = (UINTN)SystemTable;
 
-  void (*hvisor_entry)(UINTN, UINTN, UINTN) =
-      (void (*)(UINTN, UINTN, UINTN))hvisor_bin_addr;
-
-  // jump to hvisor entry
-  hvisor_entry(0, system_table, 0);
+  void (*hvisor_entry)(UINTN, UINTN) = (void (*)(UINTN, UINTN))hvisor_bin_addr;
+  hvisor_entry(0, system_table);
 
   while (1) {
   }

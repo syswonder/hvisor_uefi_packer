@@ -127,6 +127,14 @@ HVISOR_TOOL_DIR = ../hvisor-tool
 
 HVISOR_LA64_LINUX_DIR_FULL_PATH = $(shell cd $(HVISOR_LA64_LINUX_DIR) && pwd)
 
+# read CHOSEN from {HVISOR_LA64_LINUX_DIR_FULL_PATH}/chosen
+CHOSEN = $(shell cat $(HVISOR_LA64_LINUX_DIR_FULL_PATH)/chosen)
+
+# panic if CHOSEN is not set
+ifeq ($(CHOSEN),)
+$(error CHOSEN is not set. Please set it in $(HVISOR_LA64_LINUX_DIR)/chosen)
+endif
+
 world:
 	unset LD_LIBRARY_PATH
 	
@@ -137,7 +145,7 @@ world:
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> building hvisor kernel module and cmd tool"
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd $(HVISOR_TOOL_DIR) && make ARCH=loongarch KDIR=${HVISOR_LA64_LINUX_DIR_FULL_PATH}/linux-6.13.7 all
+	cd $(HVISOR_TOOL_DIR) && make ARCH=loongarch KDIR=${HVISOR_LA64_LINUX_DIR_FULL_PATH}/linux-$(CHOSEN) all
 
 	@echo ">>>>>>>>>>>>>>>>>>>>>>"
 	@echo ">>>>>>>>>>>>>>>>>>>>>> copying hvisor kernel module and cmd tool"

@@ -120,10 +120,10 @@ copy:
 	@echo "Done"
 
 # change these to your local source code paths
-HVISOR_SRC_DIR = ../hvisor
-HVISOR_LA64_LINUX_DIR = ../hvisor-la64-linux
-BUILDROOT_DIR = ../buildroot-loongarch64
-HVISOR_TOOL_DIR = ../hvisor-tool
+HVISOR_SRC_DIR := $(shell sed -n 's/^CONFIG_HVISOR_SRC_DIR="\(.*\)"/\1/p' .config)
+HVISOR_LA64_LINUX_DIR := $(shell sed -n 's/^CONFIG_HVISOR_LA64_LINUX_DIR="\(.*\)"/\1/p' .config)
+BUILDROOT_DIR := $(shell sed -n 's/^CONFIG_BUILDROOT_DIR="\(.*\)"/\1/p' .config)
+HVISOR_TOOL_DIR := $(shell sed -n 's/^CONFIG_HVISOR_TOOL_DIR="\(.*\)"/\1/p' .config)
 
 HVISOR_LA64_LINUX_DIR_FULL_PATH = $(shell cd $(HVISOR_LA64_LINUX_DIR) && pwd)
 
@@ -136,46 +136,5 @@ $(error CHOSEN is not set. Please set it in $(HVISOR_LA64_LINUX_DIR)/chosen)
 endif
 
 world:
-	unset LD_LIBRARY_PATH
-	
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	@echo ">>>>>>>>>>>>>>>>>>>>>> building world"
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	@echo ">>>>>>>>>>>>>>>>>>>>>> building hvisor kernel module and cmd tool"
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd $(HVISOR_TOOL_DIR) && make ARCH=loongarch KDIR=${HVISOR_LA64_LINUX_DIR_FULL_PATH}/linux-$(CHOSEN) all
-
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	@echo ">>>>>>>>>>>>>>>>>>>>>> copying hvisor kernel module and cmd tool"
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-
-	cp $(HVISOR_TOOL_DIR)/driver/hvisor.ko $(BUILDROOT_DIR)/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/hvisor.ko
-	cp $(HVISOR_TOOL_DIR)/tools/hvisor $(BUILDROOT_DIR)/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/hvisor
-
-# cd $(HVISOR_LA64_LINUX_DIR)/rootfs && make
-
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	@echo ">>>>>>>>>>>>>>>>>>>>>> building nonroot linux kernel"
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd $(HVISOR_LA64_LINUX_DIR) && ./build nonroot
-
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	@echo ">>>>>>>>>>>>>>>>>>>>>> copying nonroot vmlinux.bin to buildroot"
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cp $(HVISOR_LA64_LINUX_DIR)/nr_tmp/vmlinux.bin $(BUILDROOT_DIR)/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/vmlinux.bin
-	
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	@echo ">>>>>>>>>>>>>>>>>>>>>> building buildroot"
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd $(BUILDROOT_DIR) && make -j12
-
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	@echo ">>>>>>>>>>>>>>>>>>>>>> building root linux kernel"
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	cd $(HVISOR_LA64_LINUX_DIR) && ./build def && ./build kernel
-
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
-	@echo ">>>>>>>>>>>>>>>>>>>>>> building world done"
-	@echo ">>>>>>>>>>>>>>>>>>>>>>"
+	@chmod +x build_world.sh
+	@./build_world.sh

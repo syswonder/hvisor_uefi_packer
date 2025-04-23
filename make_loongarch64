@@ -1,3 +1,69 @@
 #!/bin/bash
-cat configs/wheatfox_defconfig > .config
+cat configs/wheatfox_defconfig >.config
 ARCH=loongarch64 BOARD=ls3a5000 ./make_image
+
+# Read paths from .config
+HVISOR_SRC_DIR=$(grep "^CONFIG_HVISOR_SRC_DIR=" .config | cut -d'"' -f2)
+HVISOR_LINUX_SRC=$(grep "^CONFIG_HVISOR_LA64_LINUX_DIR=" .config | cut -d'"' -f2)
+BUILDROOT_DIR=$(grep "^CONFIG_BUILDROOT_DIR=" .config | cut -d'"' -f2)
+HVISOR_TOOL_DIR=$(grep "^CONFIG_HVISOR_TOOL_DIR=" .config | cut -d'"' -f2)
+
+if [ ! -d "$HVISOR_LINUX_SRC" ]; then
+  exit 0
+fi
+
+if [ ! -d "$BUILDROOT_DIR" ]; then
+  exit 0
+fi
+
+if [ ! -d "$HVISOR_SRC_DIR" ]; then
+  exit 0
+fi
+
+CHOSEN=$(cat "$HVISOR_LINUX_SRC/chosen")
+CHOSEN_ROOT=$(cat "$HVISOR_LINUX_SRC/chosen_root")
+CHOSEN_NONROOT=$(cat "$HVISOR_LINUX_SRC/chosen_nonroot")
+
+BOLD=$(tput bold)
+RESET=$(tput sgr0)
+
+echo " CHOSEN_ROOT: $CHOSEN_ROOT"
+echo " CHOSEN_NONROOT: $CHOSEN_NONROOT"
+echo -e "${BOLD}    ROOT LINUX ${RESET} $(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry")"
+echo -e "${BOLD} NONROOT LINUX ${RESET} $(cat ${HVISOR_LINUX_SRC}/target/nonroot/vmlinux.readelf.txt | grep "Entry")"
+
+# dump ROOT_ZONE_ENTRY from HVISOR_SRC_DIR/platform/loongarch64/ls3a5000/board.rs
+echo " HVISOR_SRC_DIR/platform/loongarch64/ls3a5000/board.rs ROOT_ZONE_ENTRY: $(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY")"
+
+# dump entry_point from BUILDROOT_DIR/rootfs_ramdisk_overlay/tool/linux2.json
+echo " BUILDROOT_DIR/rootfs_ramdisk_overlay/tool/linux2.json ENTRY_POINT: $(cat ${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool/linux2.json | grep "entry_point")"
+
+# Extract entry points for comparison
+ROOT_LINUX_ENTRY=$(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry" | awk '{print $NF}')
+NONROOT_LINUX_ENTRY=$(cat ${HVISOR_LINUX_SRC}/target/nonroot/vmlinux.readelf.txt | grep "Entry" | awk '{print $NF}')
+ROOT_ZONE_ENTRY=$(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY" | awk '{print $NF}' | tr -d ';')
+NONROOT_ENTRY_POINT=$(cat ${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool/linux2.json | grep "entry_point" | awk '{print $NF}' | tr -d '",')
+
+# Compare entry points
+echo -e "\nChecking entry point configurations..."
+ERROR=0
+
+if [ "$ROOT_LINUX_ENTRY" != "$ROOT_ZONE_ENTRY" ]; then
+    echo -e "${BOLD}ERROR:${RESET} Root Linux entry point mismatch:"
+    echo "  Root Linux:    $ROOT_LINUX_ENTRY"
+    echo "  Root Zone:     $ROOT_ZONE_ENTRY"
+    ERROR=1
+fi
+
+if [ "$NONROOT_LINUX_ENTRY" != "$NONROOT_ENTRY_POINT" ]; then
+    echo -e "${BOLD}ERROR:${RESET} Non-root Linux entry point mismatch:"
+    echo "  Non-root Linux: $NONROOT_LINUX_ENTRY"
+    echo "  Entry Point:    $NONROOT_ENTRY_POINT"
+    ERROR=1
+fi
+
+if [ $ERROR -eq 0 ]; then
+    echo -e "${BOLD}SUCCESS:${RESET} All entry points match correctly!"
+fi
+
+echo " goodbye"

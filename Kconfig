@@ -36,4 +36,28 @@ config EMBEDDED_VMLINUX_PATH
   help
     Path to the embedded vmlinux.bin file.
 
+config HVISOR_SRC_DIR
+  string "Path to hvisor source code directory"
+  default "../hvisor"
+  help
+    Path to the hvisor source code directory.
+
+config HVISOR_LA64_LINUX_DIR
+  string "Path to hvisor-la64-linux directory"
+  default "../hvisor-la64-linux"
+  help
+    Path to the hvisor-la64-linux directory containing Linux kernel source.
+
+config BUILDROOT_DIR
+  string "Path to buildroot-loongarch64 directory"
+  default "../buildroot-loongarch64"
+  help
+    Path to the buildroot-loongarch64 directory.
+
+config HVISOR_TOOL_DIR
+  string "Path to hvisor-tool directory"
+  default "../hvisor-tool"
+  help
+    Path to the hvisor-tool directory.
+
 # source "lib/Kconfig"

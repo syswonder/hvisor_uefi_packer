@@ -35,8 +35,40 @@ echo -e "${BOLD} NONROOT LINUX ${RESET} $(cat ${HVISOR_LINUX_SRC}/target/nonroot
 # dump ROOT_ZONE_ENTRY from HVISOR_SRC_DIR/platform/loongarch64/ls3a5000/board.rs
 echo " HVISOR_SRC_DIR/platform/loongarch64/ls3a5000/board.rs ROOT_ZONE_ENTRY: $(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY")"
 
-# dump entry_point from BUILDROOT_DIR/rootfs_ramdisk_overlay/tool/linux2.json
-echo " BUILDROOT_DIR/rootfs_ramdisk_overlay/tool/linux2.json ENTRY_POINT: $(cat ${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool/linux2.json | grep "entry_point")"
+# Function to check entry points in all linux*.json files
+check_linux_json_entries() {
+    local json_dir="${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool"
+    local first_entry=""
+    local error=0
+    
+    echo -e "\nChecking entry points in all linux*.json files..."
+    
+    # Find all linux*.json files and check their entry points
+    for json_file in $(find "$json_dir" -name "linux*.json"); do
+        local entry_point=$(cat "$json_file" | grep "entry_point" | awk '{print $NF}' | tr -d '",')
+        local filename=$(basename "$json_file")
+        
+        if [ -z "$first_entry" ]; then
+            first_entry="$entry_point"
+            echo "  First entry point from $filename: $entry_point"
+        else
+            if [ "$entry_point" != "$first_entry" ]; then
+                echo -e "${BOLD}ERROR:${RESET} Entry point mismatch in $filename:"
+                echo "  Expected: $first_entry"
+                echo "  Found:    $entry_point"
+                error=1
+            else
+                echo "  Entry point in $filename matches: $entry_point"
+            fi
+        fi
+    done
+    
+    if [ $error -eq 0 ]; then
+        echo -e "${BOLD}SUCCESS:${RESET} All linux*.json files have consistent entry points!"
+    fi
+    
+    return $error
+}
 
 # Extract entry points for comparison
 ROOT_LINUX_ENTRY=$(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry" | awk '{print $NF}')
@@ -59,6 +91,12 @@ if [ "$NONROOT_LINUX_ENTRY" != "$NONROOT_ENTRY_POINT" ]; then
     echo -e "${BOLD}ERROR:${RESET} Non-root Linux entry point mismatch:"
     echo "  Non-root Linux: $NONROOT_LINUX_ENTRY"
     echo "  Entry Point:    $NONROOT_ENTRY_POINT"
+    ERROR=1
+fi
+
+# Check all linux*.json files
+check_linux_json_entries
+if [ $? -ne 0 ]; then
     ERROR=1
 fi
 

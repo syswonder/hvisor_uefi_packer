@@ -1,4 +1,3 @@
-
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -75,7 +74,7 @@ cp "$HVISOR_TOOL_DIR/tools/hvisor" "$BUILDROOT_DIR/board/loongson/ls3a5000/rootf
 CURRENT_STEP=$((CURRENT_STEP + 1))
 
 print_section "Building nonroot linux kernel"
-cd "$HVISOR_LA64_LINUX_DIR" && ./build def nonroot && ./build build nonroot
+cd "$HVISOR_LA64_LINUX_DIR" && ./build def nonroot && ./build kernel nonroot
 if [ $? -ne 0 ]; then
   print_error "Failed to build nonroot linux kernel"
   exit 1
@@ -84,6 +83,8 @@ CURRENT_STEP=$((CURRENT_STEP + 1))
 
 print_section "Copying nonroot vmlinux.bin to buildroot"
 cp "$HVISOR_LA64_LINUX_DIR/target/nonroot/vmlinux.bin" "$BUILDROOT_DIR/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/vmlinux.bin"
+# also copy the timestamp file
+cp "$HVISOR_LA64_LINUX_DIR/target/nonroot/build_timestamp.txt" "$BUILDROOT_DIR/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/nonroot_build_timestamp.txt"
 CURRENT_STEP=$((CURRENT_STEP + 1))
 
 print_section "Building buildroot"
@@ -95,7 +96,7 @@ fi
 CURRENT_STEP=$((CURRENT_STEP + 1))
 
 print_section "Building root linux kernel"
-cd "$HVISOR_LA64_LINUX_DIR" && ./build def root && ./build build root
+cd "$HVISOR_LA64_LINUX_DIR" && ./build def root && ./build kernel root
 if [ $? -ne 0 ]; then
   print_error "Failed to build root linux kernel"
   exit 1

@@ -119,21 +119,6 @@ copy:
 	umount $(DEV_PATH)
 	@echo "Done"
 
-# change these to your local source code paths
-HVISOR_SRC_DIR := $(shell sed -n 's/^CONFIG_HVISOR_SRC_DIR="\(.*\)"/\1/p' .config)
-HVISOR_LA64_LINUX_DIR := $(shell sed -n 's/^CONFIG_HVISOR_LA64_LINUX_DIR="\(.*\)"/\1/p' .config)
-BUILDROOT_DIR := $(shell sed -n 's/^CONFIG_BUILDROOT_DIR="\(.*\)"/\1/p' .config)
-HVISOR_TOOL_DIR := $(shell sed -n 's/^CONFIG_HVISOR_TOOL_DIR="\(.*\)"/\1/p' .config)
-
-HVISOR_LA64_LINUX_DIR_FULL_PATH = $(shell cd $(HVISOR_LA64_LINUX_DIR) && pwd)
-
-# read CHOSEN from {HVISOR_LA64_LINUX_DIR_FULL_PATH}/chosen
-CHOSEN = $(shell cat $(HVISOR_LA64_LINUX_DIR_FULL_PATH)/chosen)
-
-# panic if CHOSEN is not set
-ifeq ($(CHOSEN),)
-$(error CHOSEN is not set. Please set it in $(HVISOR_LA64_LINUX_DIR)/chosen)
-endif
 
 world:
 	@chmod +x build_world.sh

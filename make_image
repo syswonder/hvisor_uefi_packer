@@ -19,7 +19,7 @@ ARCH=${ARCH:-loongarch64}
 BOARD=${BOARD:-ls3a5000}
 
 # Log level - error, warn, info, debug, trace
-HVISOR_LOG_LEVEL=info
+HVISOR_LOG_LEVEL=$(grep CONFIG_HVISOR_LOG_LEVEL .config | cut -d'"' -f2)
 HVISOR_ARGS="BID=${ARCH}/${BOARD} LOG=${HVISOR_LOG_LEVEL}"
 
 # Make hvisor

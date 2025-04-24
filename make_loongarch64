@@ -8,6 +8,32 @@ HVISOR_LINUX_SRC=$(grep "^CONFIG_HVISOR_LA64_LINUX_DIR=" .config | cut -d'"' -f2
 BUILDROOT_DIR=$(grep "^CONFIG_BUILDROOT_DIR=" .config | cut -d'"' -f2)
 HVISOR_TOOL_DIR=$(grep "^CONFIG_HVISOR_TOOL_DIR=" .config | cut -d'"' -f2)
 
+# Color definitions
+BOLD=$(tput bold)
+RESET=$(tput sgr0)
+GREEN=$(tput setaf 2)
+RED=$(tput setaf 1)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+CYAN=$(tput setaf 6)
+
+# Formatting functions
+print_success() {
+    echo -e "${BOLD}${GREEN}✓ SUCCESS:${RESET} $1"
+}
+
+print_error() {
+    echo -e "${BOLD}${RED}✗ ERROR:${RESET} $1"
+}
+
+print_info() {
+    echo -e "${BOLD}${BLUE}ℹ INFO:${RESET} $1"
+}
+
+print_warning() {
+    echo -e "${BOLD}${YELLOW}⚠ WARNING:${RESET} $1"
+}
+
 if [ ! -d "$HVISOR_LINUX_SRC" ]; then
   exit 0
 fi
@@ -24,16 +50,14 @@ CHOSEN=$(cat "$HVISOR_LINUX_SRC/chosen")
 CHOSEN_ROOT=$(cat "$HVISOR_LINUX_SRC/chosen_root")
 CHOSEN_NONROOT=$(cat "$HVISOR_LINUX_SRC/chosen_nonroot")
 
-BOLD=$(tput bold)
-RESET=$(tput sgr0)
-
-echo " CHOSEN_ROOT: $CHOSEN_ROOT"
-echo " CHOSEN_NONROOT: $CHOSEN_NONROOT"
-echo -e "${BOLD}    ROOT LINUX ${RESET} $(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry")"
-echo -e "${BOLD} NONROOT LINUX ${RESET} $(cat ${HVISOR_LINUX_SRC}/target/nonroot/vmlinux.readelf.txt | grep "Entry")"
+echo -e "${BOLD}${CYAN}=== System Information ===${RESET}"
+echo -e "${BOLD} CHOSEN_ROOT:${RESET} $CHOSEN_ROOT"
+echo -e "${BOLD} CHOSEN_NONROOT:${RESET} $CHOSEN_NONROOT"
+echo -e "${BOLD}${CYAN} ROOT LINUX:${RESET} $(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry")"
+echo -e "${BOLD}${CYAN} NONROOT LINUX:${RESET} $(cat ${HVISOR_LINUX_SRC}/target/nonroot/vmlinux.readelf.txt | grep "Entry")"
 
 # dump ROOT_ZONE_ENTRY from HVISOR_SRC_DIR/platform/loongarch64/ls3a5000/board.rs
-echo " HVISOR_SRC_DIR/platform/loongarch64/ls3a5000/board.rs ROOT_ZONE_ENTRY: $(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY")"
+echo -e "${BOLD}${CYAN} ROOT_ZONE_ENTRY:${RESET} $(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY")"
 
 # Function to check entry points in all linux*.json files
 check_linux_json_entries() {
@@ -41,7 +65,7 @@ check_linux_json_entries() {
     local first_entry=""
     local error=0
     
-    echo -e "\nChecking entry points in all linux*.json files..."
+    echo -e "\n${BOLD}${CYAN}=== Checking Entry Points in linux*.json Files ===${RESET}"
     
     # Find all linux*.json files and check their entry points
     for json_file in $(find "$json_dir" -name "linux*.json"); do
@@ -50,21 +74,21 @@ check_linux_json_entries() {
         
         if [ -z "$first_entry" ]; then
             first_entry="$entry_point"
-            echo "  First entry point from $filename: $entry_point"
+            print_info "First entry point from $filename: $entry_point"
         else
             if [ "$entry_point" != "$first_entry" ]; then
-                echo -e "${BOLD}ERROR:${RESET} Entry point mismatch in $filename:"
-                echo "  Expected: $first_entry"
-                echo "  Found:    $entry_point"
+                print_error "Entry point mismatch in $filename:"
+                echo -e "  ${BOLD}Expected:${RESET} $first_entry"
+                echo -e "  ${BOLD}Found:${RESET}    $entry_point"
                 error=1
             else
-                echo "  Entry point in $filename matches: $entry_point"
+                print_info "Entry point in $filename matches: $entry_point"
             fi
         fi
     done
     
     if [ $error -eq 0 ]; then
-        echo -e "${BOLD}SUCCESS:${RESET} All linux*.json files have consistent entry points!"
+        print_success "All linux*.json files have consistent entry points!"
     fi
     
     return $error
@@ -77,20 +101,20 @@ ROOT_ZONE_ENTRY=$(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs |
 NONROOT_ENTRY_POINT=$(cat ${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool/linux2.json | grep "entry_point" | awk '{print $NF}' | tr -d '",')
 
 # Compare entry points
-echo -e "\nChecking entry point configurations..."
+echo -e "\n${BOLD}${CYAN}=== Entry Point Configuration Check ===${RESET}"
 ERROR=0
 
 if [ "$ROOT_LINUX_ENTRY" != "$ROOT_ZONE_ENTRY" ]; then
-    echo -e "${BOLD}ERROR:${RESET} Root Linux entry point mismatch:"
-    echo "  Root Linux:    $ROOT_LINUX_ENTRY"
-    echo "  Root Zone:     $ROOT_ZONE_ENTRY"
+    print_error "Root Linux entry point mismatch:"
+    echo -e "  ${BOLD}Root Linux:${RESET}    $ROOT_LINUX_ENTRY"
+    echo -e "  ${BOLD}Root Zone:${RESET}     $ROOT_ZONE_ENTRY"
     ERROR=1
 fi
 
 if [ "$NONROOT_LINUX_ENTRY" != "$NONROOT_ENTRY_POINT" ]; then
-    echo -e "${BOLD}ERROR:${RESET} Non-root Linux entry point mismatch:"
-    echo "  Non-root Linux: $NONROOT_LINUX_ENTRY"
-    echo "  Entry Point:    $NONROOT_ENTRY_POINT"
+    print_error "Non-root Linux entry point mismatch:"
+    echo -e "  ${BOLD}Non-root Linux:${RESET} $NONROOT_LINUX_ENTRY"
+    echo -e "  ${BOLD}Entry Point:${RESET}    $NONROOT_ENTRY_POINT"
     ERROR=1
 fi
 
@@ -101,7 +125,7 @@ if [ $? -ne 0 ]; then
 fi
 
 if [ $ERROR -eq 0 ]; then
-    echo -e "${BOLD}SUCCESS:${RESET} All entry points match correctly!"
+    print_success "All entry points match correctly!"
 fi
 
-echo " goodbye"
+echo -e "\n${BOLD}${GREEN}✓ Script completed successfully${RESET}"

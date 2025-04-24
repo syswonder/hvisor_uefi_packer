@@ -60,4 +60,10 @@ config HVISOR_TOOL_DIR
   help
     Path to the hvisor-tool directory.
 
+config HVISOR_LOG_LEVEL
+  string "hvisor log level"
+  default "info"
+  help
+    Set the log level for hvisor (error, warn, info, debug, trace).
+
 # source "lib/Kconfig"

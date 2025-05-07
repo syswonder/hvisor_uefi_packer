@@ -109,14 +109,18 @@ USER=$(shell whoami)
 DEV_PATH=/media/${USER}/${USB_STICK}
 
 copy:
-	@echo "Copying to USB stick"
-	rm -rf $(DEV_PATH)/EFI
-	mkdir -p $(DEV_PATH)/EFI/BOOT
-	cp BOOTLOONGARCH64.EFI $(DEV_PATH)/EFI/BOOT/BOOTLOONGARCH64.EFI
-	sync
-# unmount USB stick
+	@echo "Waiting for USB stick to be available..."
+	@while [ ! -d "$(DEV_PATH)" ]; do \
+		echo "USB stick not found at $(DEV_PATH), waiting..."; \
+		sleep 2; \
+	done
+	@echo "USB stick found, copying files..."
+	@rm -rf $(DEV_PATH)/EFI
+	@mkdir -p $(DEV_PATH)/EFI/BOOT
+	@dd if=BOOTLOONGARCH64.EFI of=$(DEV_PATH)/EFI/BOOT/BOOTLOONGARCH64.EFI bs=4M status=progress;
+	@sync
 	@echo "Unmounting USB stick"
-	umount $(DEV_PATH)
+	@umount $(DEV_PATH)
 	@echo "Done"
 
 

@@ -62,7 +62,7 @@ echo -e "${BOLD}${CYAN} ROOT_ZONE_ENTRY:${RESET} $(cat ${HVISOR_SRC_DIR}/platfor
 # Function to check entry points in all linux*.json files
 check_linux_json_entries() {
     local json_dir="${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool"
-    local first_entry=""
+    local expected_entry="$1"
     local error=0
     
     echo -e "\n${BOLD}${CYAN}=== Checking Entry Points in linux*.json Files ===${RESET}"
@@ -72,23 +72,18 @@ check_linux_json_entries() {
         local entry_point=$(cat "$json_file" | grep "entry_point" | awk '{print $NF}' | tr -d '",')
         local filename=$(basename "$json_file")
         
-        if [ -z "$first_entry" ]; then
-            first_entry="$entry_point"
-            print_info "First entry point from $filename: $entry_point"
+        if [ "$entry_point" != "$expected_entry" ]; then
+            print_error "Entry point mismatch in $filename:"
+            echo -e "  ${BOLD}Expected:${RESET} $expected_entry"
+            echo -e "  ${BOLD}Found:${RESET}    $entry_point"
+            error=1
         else
-            if [ "$entry_point" != "$first_entry" ]; then
-                print_error "Entry point mismatch in $filename:"
-                echo -e "  ${BOLD}Expected:${RESET} $first_entry"
-                echo -e "  ${BOLD}Found:${RESET}    $entry_point"
-                error=1
-            else
-                print_info "Entry point in $filename matches: $entry_point"
-            fi
+            print_info "Entry point in $filename matches expected: $entry_point"
         fi
     done
     
     if [ $error -eq 0 ]; then
-        print_success "All linux*.json files have consistent entry points!"
+        print_success "All linux*.json files have correct entry points!"
     fi
     
     return $error
@@ -119,7 +114,7 @@ if [ "$NONROOT_LINUX_ENTRY" != "$NONROOT_ENTRY_POINT" ]; then
 fi
 
 # Check all linux*.json files
-check_linux_json_entries
+check_linux_json_entries "$NONROOT_LINUX_ENTRY"
 if [ $? -ne 0 ]; then
     ERROR=1
 fi

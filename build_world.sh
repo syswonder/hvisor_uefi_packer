@@ -73,6 +73,14 @@ cp "$HVISOR_TOOL_DIR/driver/hvisor.ko" "$BUILDROOT_DIR/board/loongson/ls3a5000/r
 cp "$HVISOR_TOOL_DIR/tools/hvisor" "$BUILDROOT_DIR/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/hvisor"
 CURRENT_STEP=$((CURRENT_STEP + 1))
 
+print_section "Crafting nonroot rootfs cpio.gz"
+cd $HVISOR_LA64_LINUX_DIR && ./build nonroot_setup
+if [ $? -ne 0 ]; then
+  print_error "Failed to craft nonroot rootfs cpio.gz"
+  exit 1
+fi
+CURRENT_STEP=$((CURRENT_STEP + 1))
+
 print_section "Building nonroot linux kernel"
 cd "$HVISOR_LA64_LINUX_DIR" && ./build def nonroot && ./build kernel nonroot
 if [ $? -ne 0 ]; then

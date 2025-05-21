@@ -6,6 +6,21 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
+# Check for jq dependency
+if ! command -v jq &> /dev/null; then
+    echo -e "${YELLOW}jq is not installed. Installing...${NC}"
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update && sudo apt-get install -y jq
+    elif command -v yum &> /dev/null; then
+        sudo yum install -y jq
+    elif command -v pacman &> /dev/null; then
+        sudo pacman -Sy jq
+    else
+        echo -e "${RED}Could not install jq. Please install it manually.${NC}"
+        exit 1
+    fi
+fi
+
 # Additional colors for better visual hierarchy
 DIM='\033[2m'
 MAGENTA='\033[0;35m'
@@ -231,7 +246,7 @@ run_command "cd \"$HVISOR_LA64_LINUX_DIR\" && ./build def nonroot" \
 mkdir -p "$BUILDROOT_DIR/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/nonroot"
 
 # Read and process each zone from the configuration file
-while IFS= read -r line; do
+jq -r '.nonroot[] | "name: \(.name), load_addr: \(.load_addr)"' "$ZONES_CONFIG" | while IFS= read -r line; do
   # Skip empty lines
   [[ -z "$line" ]] && continue
   
@@ -255,7 +270,7 @@ while IFS= read -r line; do
     "Copying $zone_name files" \
     "$CURRENT_LOG"
 
-done < <(jq -r '.nonroot[] | "name: \(.name), load_addr: \(.load_addr)"' "$ZONES_CONFIG")
+done
 
 CURRENT_STEP=$((CURRENT_STEP + 1))
 run_command "cd \"$BUILDROOT_DIR\" && make -j12" \

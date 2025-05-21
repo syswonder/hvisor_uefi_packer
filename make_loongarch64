@@ -54,70 +54,61 @@ echo -e "${BOLD}${CYAN}=== System Information ===${RESET}"
 echo -e "${BOLD} CHOSEN_ROOT:${RESET} $CHOSEN_ROOT"
 echo -e "${BOLD} CHOSEN_NONROOT:${RESET} $CHOSEN_NONROOT"
 echo -e "${BOLD}${CYAN} ROOT LINUX:${RESET} $(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry")"
-echo -e "${BOLD}${CYAN} NONROOT LINUX:${RESET} $(cat ${HVISOR_LINUX_SRC}/target/nonroot/vmlinux.readelf.txt | grep "Entry")"
 
 # dump ROOT_ZONE_ENTRY from HVISOR_SRC_DIR/platform/loongarch64/ls3a5000/board.rs
 echo -e "${BOLD}${CYAN} ROOT_ZONE_ENTRY:${RESET} $(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY")"
 
-# Function to check entry points in all linux*.json files
-check_linux_json_entries() {
-    local json_dir="${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool"
-    local expected_entry="$1"
+# Function to check entry points for a specific zone
+check_zone_entry_point() {
+    local zone_name=$1
     local error=0
     
-    echo -e "\n${BOLD}${CYAN}=== Checking Entry Points in linux*.json Files ===${RESET}"
+    echo -e "\n${BOLD}${CYAN}=== Checking Entry Point for Zone: $zone_name ===${RESET}"
     
-    # Find all linux*.json files and check their entry points
-    for json_file in $(find "$json_dir" -name "linux*.json"); do
-        local entry_point=$(cat "$json_file" | grep "entry_point" | awk '{print $NF}' | tr -d '",')
-        local filename=$(basename "$json_file")
-        
-        if [ "$entry_point" != "$expected_entry" ]; then
-            print_error "Entry point mismatch in $filename:"
-            echo -e "  ${BOLD}Expected:${RESET} $expected_entry"
-            echo -e "  ${BOLD}Found:${RESET}    $entry_point"
-            error=1
-        else
-            print_info "Entry point in $filename matches expected: $entry_point"
-        fi
-    done
+    # Check readelf output from linux build
+    local linux_entry=$(cat "${HVISOR_LINUX_SRC}/target/nonroot-${zone_name}/vmlinux.readelf.txt" | grep "Entry" | awk '{print $NF}')
     
-    if [ $error -eq 0 ]; then
-        print_success "All linux*.json files have correct entry points!"
+    # Check json file in buildroot
+    local json_entry=$(cat "${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool/${zone_name}.json" | grep "entry_point" | awk '{print $NF}' | tr -d '",')
+    
+    if [ "$linux_entry" != "$json_entry" ]; then
+        print_error "Entry point mismatch for $zone_name:"
+        echo -e "  ${BOLD}Linux ELF:${RESET} $linux_entry"
+        echo -e "  ${BOLD}JSON:${RESET}      $json_entry"
+        error=1
+    else
+        print_info "Entry point for $zone_name matches: $linux_entry"
     fi
     
     return $error
 }
 
-# Extract entry points for comparison
-ROOT_LINUX_ENTRY=$(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry" | awk '{print $NF}')
-NONROOT_LINUX_ENTRY=$(cat ${HVISOR_LINUX_SRC}/target/nonroot/vmlinux.readelf.txt | grep "Entry" | awk '{print $NF}')
-ROOT_ZONE_ENTRY=$(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY" | awk '{print $NF}' | tr -d ';')
-NONROOT_ENTRY_POINT=$(cat ${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool/linux2.json | grep "entry_point" | awk '{print $NF}' | tr -d '",')
-
-# Compare entry points
-echo -e "\n${BOLD}${CYAN}=== Entry Point Configuration Check ===${RESET}"
+# Read and check each zone from zones.txt
+echo -e "\n${BOLD}${CYAN}=== Checking Zone Entry Points ===${RESET}"
 ERROR=0
+
+# Check root zone entry point
+ROOT_LINUX_ENTRY=$(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry" | awk '{print $NF}')
+ROOT_ZONE_ENTRY=$(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY" | awk '{print $NF}' | tr -d ';')
 
 if [ "$ROOT_LINUX_ENTRY" != "$ROOT_ZONE_ENTRY" ]; then
     print_error "Root Linux entry point mismatch:"
     echo -e "  ${BOLD}Root Linux:${RESET}    $ROOT_LINUX_ENTRY"
     echo -e "  ${BOLD}Root Zone:${RESET}     $ROOT_ZONE_ENTRY"
     ERROR=1
+else
+    print_success "Root zone entry point matches correctly!"
 fi
 
-if [ "$NONROOT_LINUX_ENTRY" != "$NONROOT_ENTRY_POINT" ]; then
-    print_error "Non-root Linux entry point mismatch:"
-    echo -e "  ${BOLD}Non-root Linux:${RESET} $NONROOT_LINUX_ENTRY"
-    echo -e "  ${BOLD}Entry Point:${RESET}    $NONROOT_ENTRY_POINT"
-    ERROR=1
-fi
-
-# Check all linux*.json files
-check_linux_json_entries "$NONROOT_LINUX_ENTRY"
-if [ $? -ne 0 ]; then
-    ERROR=1
-fi
+# Check nonroot zones from zones.txt
+while IFS=' ' read -r zone_name _; do
+    # Skip empty lines and comments
+    [[ -z "$zone_name" || "$zone_name" =~ ^# ]] && continue
+    
+    if ! check_zone_entry_point "$zone_name"; then
+        ERROR=1
+    fi
+done < "zones.txt"
 
 if [ $ERROR -eq 0 ]; then
     print_success "All entry points match correctly!"

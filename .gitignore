@@ -138,3 +138,5 @@ compile_commands.json
 *.tags
 *.aml
 *.dump
+
+logs

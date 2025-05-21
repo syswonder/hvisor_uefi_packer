@@ -87,15 +87,15 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   // this is a total mess ...
 #if defined(CONFIG_TARGET_ARCH_LOONGARCH64)
 
-  const UINTN hvisor_bin_addr = 0x9000000100010000ULL;
+  const UINTN hvisor_bin_addr = 0x90000001f0000000ULL;
   const UINTN hvisor_zone0_vmlinux_addr = 0x9000000000200000ULL;
-  const UINTN memset_st = 0x9000000100000000ULL;
-  const UINTN memset_ed = 0x9000000101000000ULL;
+  const UINTN memset_st = 0x90000001f0000000ULL;
+  const UINTN memset_ed = 0x90000001f1000000ULL;
   const UINTN memset2_st = 0x9000000000000000ULL + 0x1000;
   const UINTN memset2_size = 0x10000;
 
   // UEFI image parsing and loading
-  const UINTN hvisor_zone0_vmlinux_efi_load_addr = 0x9000000120000000ULL;
+  const UINTN hvisor_zone0_vmlinux_efi_load_addr = -1;
   UINTN hvisor_zone0_vmlinux_efi_entry_addr;
 
 #elif defined(CONFIG_TARGET_ARCH_AARCH64)

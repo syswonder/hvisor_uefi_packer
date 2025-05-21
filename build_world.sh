@@ -6,15 +6,10 @@ CYAN='\033[0;36m'
 BOLD='\033[1m'
 NC='\033[0m' # No Color
 
-# Spinner characters
-SPINNER=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
-SPINNER_INDEX=0
-
-# Function to get next spinner character
-next_spinner() {
-  echo -n "${SPINNER[$SPINNER_INDEX]}"
-  SPINNER_INDEX=$(((SPINNER_INDEX + 1) % ${#SPINNER[@]}))
-}
+# Additional colors for better visual hierarchy
+DIM='\033[2m'
+MAGENTA='\033[0;35m'
+LIGHT_BLUE='\033[1;34m'
 
 # Function to format elapsed time
 format_elapsed_time() {
@@ -36,10 +31,10 @@ update_status() {
   local elapsed_time=$(format_elapsed_time "$minutes" "$seconds")
   # Clear current line and print status with optional line
   if [ -n "$line" ]; then
-    # Only style the spinner and status, keep the line output plain
-    echo -ne "\r\033[K${BLUE}$(next_spinner)${NC} [${elapsed_time}] ${BOLD}${status}${NC} :: ${line}"
+    # Only style the dot and status, keep the line output plain
+    echo -ne "\r\033[K${LIGHT_BLUE}•${NC} ${DIM}${CURRENT_STEP}/${TOTAL_STEPS}${NC} ${MAGENTA}${elapsed_time}${NC} ${BOLD}${status}${NC} ${DIM}::${NC} ${line}"
   else
-    echo -ne "\r\033[K${BLUE}$(next_spinner)${NC} [${elapsed_time}] ${BOLD}${status}${NC}"
+    echo -ne "\r\033[K${LIGHT_BLUE}•${NC} ${DIM}${CURRENT_STEP}/${TOTAL_STEPS}${NC} ${MAGENTA}${elapsed_time}${NC} ${BOLD}${status}${NC}"
   fi
 }
 
@@ -125,16 +120,16 @@ print_section() {
   local title="$1"
   local step="$2"
   local total="$3"
-  echo -ne "${BLUE}==>${NC}${BOLD} ${title} [${step}/${total}]"
+  echo -ne "${LIGHT_BLUE}==>${NC}${BOLD} ${title}${NC} ${DIM}[${step}/${total}]${NC}"
 }
 
 print_success() {
   local status="$1"
-  echo -e "${GREEN}✓${NC}"
+  echo -e "${GREEN} ✓${NC}"
 }
 
 print_error() {
-  echo -e "${RED}✗${NC} ${1}"
+  echo -e "${RED} ✗${NC} ${1}"
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -153,14 +148,18 @@ if [ ! -f "$SCRIPT_DIR/.config" ]; then
 fi
 
 # Check for zones configuration file
-ZONES_CONFIG="$SCRIPT_DIR/zones.txt"
+ZONES_CONFIG="$SCRIPT_DIR/zones.json"
 if [ ! -f "$ZONES_CONFIG" ]; then
-  print_error "zones.txt not found in $SCRIPT_DIR"
-  print_error "Please create zones.txt with format: zone_name entry_point"
-  print_error "Example:"
-  print_error "linux1 0x90000000c0200000"
-  print_error "linux2 0x9000000040200000"
-  print_error "linux3 0x9000000060200000"
+  print_error "zones.json not found in $SCRIPT_DIR"
+  print_error "Please create zones.json with format:"
+  print_error "{"
+  print_error "  \"nonroot\": ["
+  print_error "    {"
+  print_error "      \"name\": \"linux1\","
+  print_error "      \"load_addr\": \"0x90000000c0200000\""
+  print_error "    }"
+  print_error "  ]"
+  print_error "}"
   exit 1
 fi
 
@@ -195,11 +194,11 @@ if [ -z "$CHOSEN_ROOT" ]; then
 fi
 
 # Count number of zones for progress tracking
-NUM_ZONES=$(wc -l <"$ZONES_CONFIG")
-echo "Number of zones: $NUM_ZONES"
-# dump info of zones.txt
+NUM_ZONES=$(jq '.nonroot | length' "$ZONES_CONFIG")
+echo "Number of zones found in zones.json: $NUM_ZONES"
+# dump info of zones.json
 echo "Zones config:"
-cat "$ZONES_CONFIG"
+jq -r '.nonroot[] | "name: \(.name), load_addr: \(.load_addr)"' "$ZONES_CONFIG"
 
 TOTAL_STEPS=$((6 + NUM_ZONES))
 CURRENT_STEP=0
@@ -232,14 +231,21 @@ run_command "cd \"$HVISOR_LA64_LINUX_DIR\" && ./build def nonroot" \
 mkdir -p "$BUILDROOT_DIR/board/loongson/ls3a5000/rootfs_ramdisk_overlay/tool/nonroot"
 
 # Read and process each zone from the configuration file
-while IFS=' ' read -r zone_name entry_point; do
-  # Skip empty lines and comments
-  [[ -z "$zone_name" || "$zone_name" =~ ^# ]] && continue
+while IFS= read -r line; do
+  # Skip empty lines
+  [[ -z "$line" ]] && continue
+  
+  # Extract zone name and entry point
+  zone_name=$(echo "$line" | cut -d',' -f1 | cut -d':' -f2 | tr -d ' ')
+  entry_point=$(echo "$line" | cut -d',' -f2 | cut -d':' -f2 | tr -d ' ')
+  
+  # Skip if either value is empty
+  [[ -z "$zone_name" || -z "$entry_point" ]] && continue
 
   CURRENT_STEP=$((CURRENT_STEP + 1))
 
   run_command "cd \"$HVISOR_LA64_LINUX_DIR\" && ./build zone nonroot \"$zone_name\" \"$entry_point\"" \
-    "Building $zone_name zone" \
+    "Building ${BLUE}$zone_name${NC} zone with load addr ${YELLOW}$entry_point${NC}" \
     "$CURRENT_LOG"
 
   run_command "cp \"$HVISOR_LA64_LINUX_DIR/target/nonroot-$zone_name/vmlinux-$zone_name.bin\" \
@@ -249,7 +255,7 @@ while IFS=' ' read -r zone_name entry_point; do
     "Copying $zone_name files" \
     "$CURRENT_LOG"
 
-done <"$ZONES_CONFIG"
+done < <(jq -r '.nonroot[] | "name: \(.name), load_addr: \(.load_addr)"' "$ZONES_CONFIG")
 
 CURRENT_STEP=$((CURRENT_STEP + 1))
 run_command "cd \"$BUILDROOT_DIR\" && make -j12" \

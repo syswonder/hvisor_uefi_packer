@@ -140,3 +140,5 @@ compile_commands.json
 *.dump
 
 logs
+
+deploy

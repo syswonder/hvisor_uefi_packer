@@ -27,7 +27,7 @@ echo "Extracting rootfs archive..."
 gunzip -c "$ROOTFS_ARCHIVE" | (cd "$TEMP_DIR" && cpio -idm)
 
 echo "Copying files to target directory..."
-cp -av "$TEMP_DIR"/* "$TARGET_DIR"/
+cp -a "$TEMP_DIR"/* "$TARGET_DIR"/
 
 echo "Cleaning up..."
 rm -rf "$TEMP_DIR"

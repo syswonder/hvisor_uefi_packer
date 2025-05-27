@@ -1,11 +1,13 @@
-# create dir deploy if not exists
+DEPLOY_OVERLAY_ROOT=DEPLOY_OVERLAY
 TOOL_DIR=tool
 
 rm -rf deploy
 if [ ! -d "deploy" ]; then
     mkdir -p deploy
-    mkdir -p deploy/$TOOL_DIR
-    mkdir -p deploy/EFI/BOOT
+    mkdir -p deploy/$DEPLOY_OVERLAY_ROOT
+    mkdir -p deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR
+    mkdir -p deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/nonroot
+    # mkdir -p deploy/EFI/BOOT
     mkdir -p deploy/maintenance
 fi
 
@@ -69,49 +71,37 @@ if [ ! -f "$rootfs_cpio_gz" ]; then
     exit 1
 fi
 
-# 1. copy hvisor UEFI image to deploy/EFI/BOOT/BOOTLOONGARCH64.EFI
-cp $HVISOR_UEFI_IMAGE deploy/EFI/BOOT/BOOTLOONGARCH64.EFI
-
-# 2. copy nonroot vmlinux.bin to deploy/$TOOL_DIR
-# iterate HVISOR_LINUX_SRC/target/nonroot-linux*/vmlinux-linux*.bin
-# copy to deploy/$TOOL_DIR/vmlinux-{zone_name}.bin
+cp $HVISOR_UEFI_IMAGE deploy/HVISOR_UEFI.EFI
 
 for nonroot_vmlinux in $HVISOR_LINUX_SRC/target/nonroot-linux*/vmlinux-linux*.bin; do
     zone_name=$(basename $(dirname $nonroot_vmlinux) | sed 's/nonroot-//')
-    cp $nonroot_vmlinux deploy/$TOOL_DIR/vmlinux-$zone_name.bin
+    cp $nonroot_vmlinux deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/nonroot/vmlinux-$zone_name.bin
 done
 
-# 3. then create virtio ext4 images for each nonroot zone (linux1-linux3) based on buildroot's output's ext4 image
-# target rootfs.cpio.gz at BUILDROOT_DIR/output/images/rootfs.cpio.gz
-# we create a canonical ext4 image for each nonroot zone from rootfs.cpio.gz
-rootfs_cpio_gz=$BUILDROOT_DIR/output/images/rootfs.cpio.gz
-cp $rootfs_cpio_gz deploy/$TOOL_DIR/rootfs.cpio.gz
-# create an ext4 image with capacity 2GB
-dd if=/dev/zero of=deploy/$TOOL_DIR/_.ext4 bs=1M count=2048
+cp $rootfs_cpio_gz deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/rootfs.cpio.gz
+dd if=/dev/zero of=deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/_.ext4 bs=1M count=2048
 if [ $? -ne 0 ]; then
     echo "Error: Failed to create ext4 image"
     exit 1
 fi
 
-sudo mkfs.ext4 deploy/$TOOL_DIR/_.ext4
+sudo mkfs.ext4 deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/_.ext4
 if [ $? -ne 0 ]; then
     echo "Error: Failed to format ext4 image"
     exit 1
 fi
 
-# Create mount point if it doesn't exist
 if [ ! -d "/mnt" ]; then
     sudo mkdir -p /mnt
 fi
 
-sudo mount -o loop deploy/$TOOL_DIR/_.ext4 /mnt
+sudo mount -o loop deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/_.ext4 /mnt
 if [ $? -ne 0 ]; then
     echo "Error: Failed to mount ext4 image"
     exit 1
 fi
 
-# unpack the contexts of rootfs.cpio.gz to the ext4 image
-gunzip -c deploy/$TOOL_DIR/rootfs.cpio.gz > deploy/$TOOL_DIR/rootfs.cpio
+gunzip -c deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/rootfs.cpio.gz > deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/rootfs.cpio
 if [ $? -ne 0 ]; then
     echo "Error: Failed to extract rootfs.cpio.gz"
     sudo umount /mnt
@@ -119,7 +109,7 @@ if [ $? -ne 0 ]; then
 fi
 
 WORK_DIR=$(pwd)
-cd /mnt && sudo cpio -id < $WORK_DIR/deploy/$TOOL_DIR/rootfs.cpio
+cd /mnt && sudo cpio -id < $WORK_DIR/deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/rootfs.cpio
 if [ $? -ne 0 ]; then
     echo "Error: Failed to extract rootfs.cpio"
     cd - > /dev/null
@@ -128,10 +118,10 @@ if [ $? -ne 0 ]; then
 fi
 cd - > /dev/null
 
-# remove /tool folder
-sudo rm -rf /mnt/tool
+sudo rm -rf /mnt/$TOOL_DIR
 sudo rm -rf /mnt/*.sh
 sudo rm -rf /mnt/nohup*
+sudo touch /mnt/this_is_virtio_blk_rootfs
 
 sudo ls -l /mnt
 sudo umount /mnt
@@ -142,40 +132,37 @@ fi
 
 nonroot_zones=("linux1" "linux2" "linux3")
 for zone_name in ${nonroot_zones[@]}; do
-    cp deploy/$TOOL_DIR/_.ext4 deploy/$TOOL_DIR/$zone_name-disk.ext4
+    cp deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/_.ext4 deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/$zone_name-disk.ext4
 done
 
-rm -rf deploy/$TOOL_DIR/_.ext4
-rm -rf deploy/$TOOL_DIR/rootfs.cpio
-rm -rf deploy/$TOOL_DIR/rootfs.cpio.gz
+rm -rf deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/_.ext4
+rm -rf deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/rootfs.cpio
 
-# now copy BUILDROOT_DIR/rootfs_ramdisk_overlay/tool/{zone_name}.json to deploy/$TOOL_DIR/{zone_name}.json
 for zone_name in ${nonroot_zones[@]}; do
     if [ -f "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/$zone_name.json" ]; then
-        cp "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/$zone_name.json" "deploy/$TOOL_DIR/$zone_name.json"
+        cp "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/$zone_name.json" "deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/$zone_name.json"
     else
         echo "Warning: $zone_name.json not found in $BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/"
     fi
 done
 
-# also copy virtio_cfg.json to deploy/$TOOL_DIR/virtio_cfg.json if it exists
 if [ -f "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/virtio_cfg.json" ]; then
-    cp "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/virtio_cfg.json" "deploy/$TOOL_DIR/virtio_cfg.json"
+    cp "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/virtio_cfg.json" "deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/virtio_cfg.json"
 else
     echo "Warning: virtio_cfg.json not found in $BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/"
 fi
 
-# copy test.bin if it exists
 if [ -f "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/test.bin" ]; then
-    cp "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/test.bin" "deploy/$TOOL_DIR/test.bin"
+    cp "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/test.bin" "deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/test.bin"
 else
     echo "Warning: test.bin not found in $BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/"
 fi
 
-cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/hvisor* deploy/$TOOL_DIR/
-cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/hvisor-manager.sh deploy/
+cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/hvisor* deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/
+cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/install.sh deploy/$DEPLOY_OVERLAY_ROOT/
+cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/daemon.sh deploy/$DEPLOY_OVERLAY_ROOT/
+cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/start.sh deploy/$DEPLOY_OVERLAY_ROOT/
 
-# copy ./ssd_deploy* to deploy/maintenance/
 cp ./ssd_deploy* deploy/maintenance/
 
 echo "Deployment completed successfully!" 

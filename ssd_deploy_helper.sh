@@ -126,6 +126,7 @@ sudo echo "nonroot-dedsec" | sudo tee /mnt/etc/hostname
 sudo touch /mnt/this_is_virtio_blk_rootfs
 # also sync etc/profile to nonroot zones
 sudo cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/etc/profile /mnt/etc/profile
+sudo cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/etc/inittab_nonroot /mnt/etc/inittab # use nonroot inittab with agetty on hvc0
 
 sudo ls -l /mnt
 sudo umount /mnt
@@ -155,7 +156,8 @@ if [ ! -d "deploy/$DEPLOY_OVERLAY_ROOT/etc" ]; then
     mkdir -p deploy/$DEPLOY_OVERLAY_ROOT/etc
 fi
 
-cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/etc/profile deploy/$DEPLOY_OVERLAY_ROOT/etc/profile
+cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/etc/profile deploy/$DEPLOY_OVERLAY_ROOT/etc/profile # update our modified profile when deploy to root linux
+cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/etc/inittab deploy/$DEPLOY_OVERLAY_ROOT/etc/inittab # update our modified inittab when deploy to root linux
 
 if [ -f "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/virtio_cfg.json" ]; then
     cp "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/virtio_cfg.json" "deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/virtio_cfg.json"

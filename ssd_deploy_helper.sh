@@ -79,7 +79,7 @@ for nonroot_vmlinux in $HVISOR_LINUX_SRC/target/nonroot-linux*/vmlinux-linux*.bi
 done
 
 cp $rootfs_cpio_gz deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/rootfs.cpio.gz
-dd if=/dev/zero of=deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/_.ext4 bs=1M count=2048
+dd if=/dev/zero of=deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/_.ext4 bs=1M count=256
 if [ $? -ne 0 ]; then
     echo "Error: Failed to create ext4 image"
     exit 1
@@ -121,7 +121,11 @@ cd - > /dev/null
 sudo rm -rf /mnt/$TOOL_DIR
 sudo rm -rf /mnt/*.sh
 sudo rm -rf /mnt/nohup*
+sudo rm -f /mnt/etc/hostname
+sudo echo "nonroot-dedsec" | sudo tee /mnt/etc/hostname
 sudo touch /mnt/this_is_virtio_blk_rootfs
+# also sync etc/profile to nonroot zones
+sudo cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/etc/profile /mnt/etc/profile
 
 sudo ls -l /mnt
 sudo umount /mnt
@@ -145,6 +149,13 @@ for zone_name in ${nonroot_zones[@]}; do
         echo "Warning: $zone_name.json not found in $BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/"
     fi
 done
+
+# create deploy's etc dir if not exists
+if [ ! -d "deploy/$DEPLOY_OVERLAY_ROOT/etc" ]; then
+    mkdir -p deploy/$DEPLOY_OVERLAY_ROOT/etc
+fi
+
+cp $BUILDROOT_DIR/rootfs_ramdisk_overlay/etc/profile deploy/$DEPLOY_OVERLAY_ROOT/etc/profile
 
 if [ -f "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/virtio_cfg.json" ]; then
     cp "$BUILDROOT_DIR/rootfs_ramdisk_overlay/$TOOL_DIR/virtio_cfg.json" "deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/virtio_cfg.json"

@@ -1,3 +1,66 @@
 #!/bin/bash
 
-make -f Makefile.1 copy
+if [ "$1" == "deploy" ]; then
+
+    USB_STICK=HVISOR_LA64
+    USER=$(whoami)
+    DEV_PATH=/media/${USER}/${USB_STICK}
+
+    echo "Copying deploy to ${DEV_PATH}/deploy"
+
+    # copy:
+    # @echo "Waiting for USB stick to be available..."
+    # @while [ ! -d "$(DEV_PATH)" ]; do \
+    # 	echo "USB stick not found at $(DEV_PATH), waiting..."; \
+    # 	sleep 2; \
+    # done
+    # @echo "USB stick found, copying files..."
+    # @rm -rf $(DEV_PATH)/EFI
+    # @mkdir -p $(DEV_PATH)/EFI/BOOT
+    # @dd if=BOOTLOONGARCH64.EFI of=$(DEV_PATH)/EFI/BOOT/BOOTLOONGARCH64.EFI bs=4M status=progress;
+    # @sync
+    # @echo "Unmounting USB stick"
+    # @umount $(DEV_PATH)
+    # @echo "Done"
+
+    while [ ! -d "${DEV_PATH}" ]; do
+        echo "USB stick not found at ${DEV_PATH}, waiting..."
+        sleep 2
+    done
+
+    echo "USB stick found, copying files..."
+    cp -arv ./deploy ${DEV_PATH}/
+
+    sync
+    echo "Done"
+
+fi
+
+if [ "$1" == "deploy_noext4" ]; then
+
+    USB_STICK=HVISOR_LA64
+    USER=$(whoami)
+    DEV_PATH=/media/${USER}/${USB_STICK}
+
+    echo "Copying deploy to ${DEV_PATH}/deploy and ignore ext4 files"
+
+    while [ ! -d "${DEV_PATH}" ]; do
+        echo "USB stick not found at ${DEV_PATH}, waiting..."
+        sleep 2
+    done
+
+    echo "USB stick found, copying files while maintaining directory structure..."
+    # Create deploy directory if it doesn't exist
+    mkdir -p ${DEV_PATH}/deploy
+    # Use rsync to copy files while maintaining directory structure and excluding .ext4 files
+    rsync -av --exclude="*.ext4" ./deploy/ ${DEV_PATH}/deploy/
+    sync
+    echo "Done"
+
+fi
+
+# if not set -dev flag, then copy to USB stick
+if [ "$2" != "-dev" ]; then
+    echo "Copying to USB stick"
+    make -f Makefile.1 copy
+fi

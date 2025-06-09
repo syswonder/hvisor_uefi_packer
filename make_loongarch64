@@ -1,6 +1,5 @@
 #!/bin/bash
-cat configs/wheatfox_defconfig >.config
-ARCH=loongarch64 BOARD=ls3a5000 ./make_image
+# cat configs/wheatfox_defconfig >.config
 
 # Read paths from .config
 HVISOR_SRC_DIR=$(grep "^CONFIG_HVISOR_SRC_DIR=" .config | cut -d'"' -f2)
@@ -35,8 +34,8 @@ print_warning() {
 }
 
 # Check for jq dependency
-if ! command -v jq &> /dev/null; then
-    print_error "jq is not installed. Please install it first."
+if ! command -v jq &>/dev/null; then
+    print_error "jq is not installed. Please install it by 'sudo apt install jq'"
     exit 1
 fi
 
@@ -55,6 +54,20 @@ if [ ! -d "$HVISOR_SRC_DIR" ]; then
     exit 1
 fi
 
+# first check whether the .config exists
+if [ ! -f ".config" ]; then
+    print_error ".config not found, please run 'make menuconfig' to generate it"
+    exit 1
+fi
+
+# then check whether the .config is correct
+# check whether the ARCH is loongarch64
+if [ "$(grep "^CONFIG_TARGET_ARCH_LOONGARCH64=" .config)" != "CONFIG_TARGET_ARCH_LOONGARCH64=y" ]; then
+    print_error "ARCH is not loongarch64, please check the .config"
+    exit 1
+fi
+
+ARCH=loongarch64 BOARD=ls3a5000 ./make_image
 # Check for zones configuration file
 ZONES_CONFIG="zones.json"
 if [ ! -f "$ZONES_CONFIG" ]; then
@@ -88,15 +101,15 @@ check_zone_entry_point() {
     local zone_name=$1
     local load_addr=$2
     local error=0
-    
+
     echo -e "\n${BOLD}${CYAN}=== Checking Entry Point for Zone: $zone_name ===${RESET}"
-    
+
     # Check readelf output from linux build
     local linux_entry=$(cat "${HVISOR_LINUX_SRC}/target/nonroot-${zone_name}/vmlinux.readelf.txt" | grep "Entry" | awk '{print $NF}')
-    
+
     # Check json file in buildroot
     local json_entry=$(cat "${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool/${zone_name}.json" | grep "entry_point" | awk '{print $NF}' | tr -d '",')
-    
+
     if [ "$linux_entry" != "$json_entry" ]; then
         print_error "Entry point mismatch for $zone_name:"
         echo -e "  ${BOLD}Linux ELF:${RESET} $linux_entry"
@@ -105,7 +118,7 @@ check_zone_entry_point() {
     else
         print_info "Entry point for $zone_name matches: $linux_entry"
     fi
-    
+
     return $error
 }
 
@@ -130,7 +143,7 @@ fi
 jq -r '.nonroot[] | "\(.name) \(.load_addr)"' "$ZONES_CONFIG" | while read -r zone_name load_addr; do
     # Skip empty lines
     [[ -z "$zone_name" || -z "$load_addr" ]] && continue
-    
+
     if ! check_zone_entry_point "$zone_name" "$load_addr"; then
         ERROR=1
     fi

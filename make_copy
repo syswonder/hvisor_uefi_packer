@@ -29,7 +29,7 @@ if [ "$1" == "deploy" ]; then
     done
 
     echo "USB stick found, copying files..."
-    cp -arv ./deploy ${DEV_PATH}/
+    cp -ar ./deploy ${DEV_PATH}/
 
     sync
     echo "Done"

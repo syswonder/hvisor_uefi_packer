@@ -71,8 +71,17 @@ if [ ! -f "$rootfs_cpio_gz" ]; then
     exit 1
 fi
 
+# copy hvisor UEFI image
 cp $HVISOR_UEFI_IMAGE deploy/HVISOR_UEFI.EFI
 
+# copy root linux kernel modules
+cp -r $HVISOR_LINUX_SRC/target/root/kernel_modules deploy/root_linux_kernel_modules_6_11_6
+
+# copy nonroot linux kernel modules, use nonroot-linux1's because all nonroot has the same kernel
+NONROOT_KERNEL_MODULES_ZONE_NAME="linux1"
+cp -r $HVISOR_LINUX_SRC/target/nonroot-$NONROOT_KERNEL_MODULES_ZONE_NAME/kernel_modules deploy/nonroot_linux_kernel_modules_6_13_7
+
+# copy nonroot linux vmlinux
 for nonroot_vmlinux in $HVISOR_LINUX_SRC/target/nonroot-linux*/vmlinux-linux*.bin; do
     zone_name=$(basename $(dirname $nonroot_vmlinux) | sed 's/nonroot-//')
     cp $nonroot_vmlinux deploy/$DEPLOY_OVERLAY_ROOT/$TOOL_DIR/nonroot/vmlinux-$zone_name.bin

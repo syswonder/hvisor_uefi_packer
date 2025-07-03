@@ -144,3 +144,5 @@ logs
 deploy
 
 *deploy.zip
+
+.cache

@@ -84,7 +84,7 @@ if [ ! -f "$ZONES_CONFIG" ]; then
     exit 1
 fi
 
-CHOSEN=$(cat "$HVISOR_LINUX_SRC/chosen")
+# CHOSEN=$(cat "$HVISOR_LINUX_SRC/chosen")
 CHOSEN_ROOT=$(cat "$HVISOR_LINUX_SRC/chosen_root")
 CHOSEN_NONROOT=$(cat "$HVISOR_LINUX_SRC/chosen_nonroot")
 

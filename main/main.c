@@ -78,13 +78,9 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
   // the entry is the same as the load address
   UINTN hvisor_bin_size = &hvisor_bin_end - &hvisor_bin_start;
-  // UINTN hvisor_dtb_size = &hvisor_dtb_end - &hvisor_dtb_start;
   UINTN hvisor_zone0_vmlinux_size =
       &hvisor_zone0_vmlinux_end - &hvisor_zone0_vmlinux_start;
 
-  UINTN hvisor_zone0_vmlinux_start_addr = (UINTN)&hvisor_zone0_vmlinux_start;
-  // TODO: add to Kconfig or clean up code structure
-  // this is a total mess ...
 #if defined(CONFIG_TARGET_ARCH_LOONGARCH64)
 
   const UINTN hvisor_bin_addr = 0x90000001f0000000ULL;
@@ -93,10 +89,6 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   const UINTN memset_ed = 0x90000001f1000000ULL;
   const UINTN memset2_st = 0x9000000000000000ULL + 0x1000;
   const UINTN memset2_size = 0x10000;
-
-  // UEFI image parsing and loading
-  const UINTN hvisor_zone0_vmlinux_efi_load_addr = -1;
-  UINTN hvisor_zone0_vmlinux_efi_entry_addr;
 
 #elif defined(CONFIG_TARGET_ARCH_AARCH64)
 
@@ -126,22 +118,6 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
         memset2_st + memset2_size);
   memset2((void *)memset2_st, 0, memset2_size);
 
-  // 1. parse vmlinux.efi, get the offset of entry point
-  // 2. load sections to hvisor_zone0_vmlinux_efi_load_addr (EFI image is PIC
-  // code so we can load it to anywhere)
-  // 3. later jump to entry
-
-  // hvisor_zone0_vmlinux_efi_entry_addr = parse_pe(
-  //     hvisor_zone0_vmlinux_start_addr, hvisor_zone0_vmlinux_efi_load_addr,
-  //     hvisor_zone0_vmlinux_size); // parse vmlinux.efi and get entry addr
-  // if (hvisor_zone0_vmlinux_efi_entry_addr == 0) {
-  //   Print(L"[ERROR] parse_pe failed !!!\n");
-  //   halt();
-  // } else {
-  //   Print(L"[INFO] parse_pe done, entry addr = 0x%lx\n",
-  //         hvisor_zone0_vmlinux_efi_entry_addr);
-  // }
-
 #endif
 
   Print(L"====================================================================="
@@ -154,19 +130,10 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   Print(L"====================================================================="
         L"==========\n");
 
-  // dump first 8 instructions of hvisor binary
-  // 0x12345677 0x00001234 ...
-  for (int i = 0; i < 8; i++) {
-    Print(L"0x%08x ", ((UINT32 *)hvisor_bin_start)[i]);
-  }
-  Print(L"\n");
-
   // now we have exited boot services
   memcpy2((void *)hvisor_bin_addr, (void *)hvisor_bin_start, hvisor_bin_size);
   Print(L"[INFO] hvisor binary copied\n");
 
-  // memcpy2((void *)hvisor_dtb_addr, (void *)hvisor_dtb_start,
-  // hvisor_dtb_size);
 #ifndef CONFIG_TARGET_ARCH_AARCH64
   memcpy2((void *)hvisor_zone0_vmlinux_addr, (void *)hvisor_zone0_vmlinux_start,
           hvisor_zone0_vmlinux_size);

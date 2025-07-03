@@ -170,4 +170,8 @@ cp -v "$DEPLOY_DIR/HVISOR_UEFI.EFI" "$PARTITION3_MOUNTPOINT/"
 echo "Copying DEPLOY_OVERLAY to partition 4..."
 cp -rv "$DEPLOY_DIR/DEPLOY_OVERLAY"/* "$PARTITION4_MOUNTPOINT/"
 
+# Copy modules to root linux ROOTFS
+echo "Copying modules..."
+cp -r "$DEPLOY_DIR/root_linux_kernel_modules_6_11_6/lib/modules" "$PARTITION4_MOUNTPOINT/lib/"
+
 echo "Deployment completed successfully!"

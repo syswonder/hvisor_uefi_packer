@@ -3,7 +3,7 @@
 
 #include "acpi.h"
 #include "core.h"
-#include "parse.h"
+#include "generated/autoconf.h"
 
 EFI_GRAPHICS_OUTPUT_PROTOCOL *gop;
 EFI_SYSTEM_TABLE *g_st;
@@ -100,8 +100,12 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
 
 #elif defined(CONFIG_TARGET_ARCH_AARCH64)
 
-  const UINTN hvisor_bin_addr = 0x40400000;
-  const UINTN hvisor_zone0_vmlinux_addr = 0xa0400000;
+  const UINTN hvisor_bin_addr = CONFIG_HVISOR_BIN_LOAD_ADDR;
+#if defined(CONFIG_ENABLE_VMLINUX)
+  const UINTN hvisor_zone0_vmlinux_addr = CONFIG_VMLINUX_LOAD_ADDR;
+#else
+  const UINTN hvisor_zone0_vmlinux_addr = 0;
+#endif
 
 #else
 #error "Unsupported target arch"

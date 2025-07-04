@@ -1,3 +1,4 @@
 #!/bin/bash
-cat configs/jeston_orin_defconfig > .config
+set -e
+cp configs/nvidia_jeston_aarch64_defconfig .config
 ARCH=aarch64 BOARD=qemu-gicv3 ./make_image

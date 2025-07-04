@@ -1,3 +1,158 @@
 #!/bin/bash
-cat configs/wheatfox_defconfig > .config
+# cat configs/wheatfox_defconfig >.config
+
+cp configs/wheatfox_loongarch64_defconfig .config
+
+# Read paths from .config
+HVISOR_SRC_DIR=$(grep "^CONFIG_HVISOR_SRC_DIR=" .config | cut -d'"' -f2)
+HVISOR_LINUX_SRC=$(grep "^CONFIG_HVISOR_LA64_LINUX_DIR=" .config | cut -d'"' -f2)
+BUILDROOT_DIR=$(grep "^CONFIG_BUILDROOT_DIR=" .config | cut -d'"' -f2)
+HVISOR_TOOL_DIR=$(grep "^CONFIG_HVISOR_TOOL_DIR=" .config | cut -d'"' -f2)
+
+# Color definitions
+BOLD=$(tput bold)
+RESET=$(tput sgr0)
+GREEN=$(tput setaf 2)
+RED=$(tput setaf 1)
+YELLOW=$(tput setaf 3)
+BLUE=$(tput setaf 4)
+CYAN=$(tput setaf 6)
+
+# Formatting functions
+print_success() {
+    echo -e "${BOLD}${GREEN}✓ SUCCESS:${RESET} $1"
+}
+
+print_error() {
+    echo -e "${BOLD}${RED}✗ ERROR:${RESET} $1"
+}
+
+print_info() {
+    echo -e "${BOLD}${BLUE}ℹ INFO:${RESET} $1"
+}
+
+print_warning() {
+    echo -e "${BOLD}${YELLOW}⚠ WARNING:${RESET} $1"
+}
+
+# Check for jq dependency
+if ! command -v jq &>/dev/null; then
+    print_error "jq is not installed. Please install it by 'sudo apt install jq'"
+    exit 1
+fi
+
+if [ ! -d "$HVISOR_LINUX_SRC" ]; then
+    print_error "HVISOR_LINUX_SRC directory not found: $HVISOR_LINUX_SRC"
+    exit 1
+fi
+
+if [ ! -d "$BUILDROOT_DIR" ]; then
+    print_error "BUILDROOT_DIR directory not found: $BUILDROOT_DIR"
+    exit 1
+fi
+
+if [ ! -d "$HVISOR_SRC_DIR" ]; then
+    print_error "HVISOR_SRC_DIR directory not found: $HVISOR_SRC_DIR"
+    exit 1
+fi
+
+# first check whether the .config exists
+if [ ! -f ".config" ]; then
+    print_error ".config not found, please run 'make menuconfig' to generate it"
+    exit 1
+fi
+
+# then check whether the .config is correct
+# check whether the ARCH is loongarch64
+if [ "$(grep "^CONFIG_TARGET_ARCH_LOONGARCH64=" .config)" != "CONFIG_TARGET_ARCH_LOONGARCH64=y" ]; then
+    print_error "ARCH is not loongarch64, please check the .config"
+    exit 1
+fi
+
 ARCH=loongarch64 BOARD=ls3a5000 ./make_image
+# Check for zones configuration file
+ZONES_CONFIG="zones.json"
+if [ ! -f "$ZONES_CONFIG" ]; then
+    print_error "zones.json not found"
+    print_error "Please create zones.json with format:"
+    print_error "{"
+    print_error "  \"nonroot\": ["
+    print_error "    {"
+    print_error "      \"name\": \"linux1\","
+    print_error "      \"load_addr\": \"0x90000000c0200000\""
+    print_error "    }"
+    print_error "  ]"
+    print_error "}"
+    exit 1
+fi
+
+# CHOSEN=$(cat "$HVISOR_LINUX_SRC/chosen")
+CHOSEN_ROOT=$(cat "$HVISOR_LINUX_SRC/chosen_root")
+CHOSEN_NONROOT=$(cat "$HVISOR_LINUX_SRC/chosen_nonroot")
+
+echo -e "${BOLD}${CYAN}=== System Information ===${RESET}"
+echo -e "${BOLD} CHOSEN_ROOT:${RESET} $CHOSEN_ROOT"
+echo -e "${BOLD} CHOSEN_NONROOT:${RESET} $CHOSEN_NONROOT"
+echo -e "${BOLD}${CYAN} ROOT LINUX:${RESET} $(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry")"
+
+# dump ROOT_ZONE_ENTRY from HVISOR_SRC_DIR/platform/loongarch64/ls3a5000/board.rs
+echo -e "${BOLD}${CYAN} ROOT_ZONE_ENTRY:${RESET} $(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY")"
+
+# Function to check entry points for a specific zone
+check_zone_entry_point() {
+    local zone_name=$1
+    local load_addr=$2
+    local error=0
+
+    echo -e "\n${BOLD}${CYAN}=== Checking Entry Point for Zone: $zone_name ===${RESET}"
+
+    # Check readelf output from linux build
+    local linux_entry=$(cat "${HVISOR_LINUX_SRC}/target/nonroot-${zone_name}/vmlinux.readelf.txt" | grep "Entry" | awk '{print $NF}')
+
+    # Check json file in buildroot
+    local json_entry=$(cat "${BUILDROOT_DIR}/rootfs_ramdisk_overlay/tool/${zone_name}.json" | grep "entry_point" | awk '{print $NF}' | tr -d '",')
+
+    if [ "$linux_entry" != "$json_entry" ]; then
+        print_error "Entry point mismatch for $zone_name:"
+        echo -e "  ${BOLD}Linux ELF:${RESET} $linux_entry"
+        echo -e "  ${BOLD}JSON:${RESET}      $json_entry"
+        error=1
+    else
+        print_info "Entry point for $zone_name matches: $linux_entry"
+    fi
+
+    return $error
+}
+
+# Read and check each zone from zones.json
+echo -e "\n${BOLD}${CYAN}=== Checking Zone Entry Points ===${RESET}"
+ERROR=0
+
+# Check root zone entry point
+ROOT_LINUX_ENTRY=$(cat ${HVISOR_LINUX_SRC}/target/root/vmlinux.readelf.txt | grep "Entry" | awk '{print $NF}')
+ROOT_ZONE_ENTRY=$(cat ${HVISOR_SRC_DIR}/platform/loongarch64/ls3a5000/board.rs | grep "ROOT_ZONE_ENTRY" | awk '{print $NF}' | tr -d ';')
+
+if [ "$ROOT_LINUX_ENTRY" != "$ROOT_ZONE_ENTRY" ]; then
+    print_error "Root Linux entry point mismatch:"
+    echo -e "  ${BOLD}Root Linux:${RESET}    $ROOT_LINUX_ENTRY"
+    echo -e "  ${BOLD}Root Zone:${RESET}     $ROOT_ZONE_ENTRY"
+    ERROR=1
+else
+    print_success "Root zone entry point matches correctly!"
+fi
+
+# Check nonroot zones from zones.json
+jq -r '.nonroot[] | "\(.name) \(.load_addr)"' "$ZONES_CONFIG" | while read -r zone_name load_addr; do
+    # Skip empty lines
+    [[ -z "$zone_name" || -z "$load_addr" ]] && continue
+
+    if ! check_zone_entry_point "$zone_name" "$load_addr"; then
+        ERROR=1
+    fi
+done
+
+if [ $ERROR -eq 0 ]; then
+    print_success "All entry points match correctly!"
+fi
+
+echo -e "\n${BOLD}${GREEN}✓ Script completed successfully${RESET}"

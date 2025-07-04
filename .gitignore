@@ -137,3 +137,12 @@ compile_commands.json
 
 *.tags
 *.aml
+*.dump
+
+logs
+
+deploy
+
+*deploy.zip
+
+.cache

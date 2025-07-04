@@ -3,10 +3,11 @@
 
 set -e
 
-# !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# Change to your hvisor source code directory
-HVISOR_SRC_DIR=../hvisor
-# !!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+HVISOR_SRC_DIR=$(grep "^CONFIG_HVISOR_SRC_DIR=" .config | cut -d'"' -f2)
+HVISOR_LINUX_SRC=$(grep "^CONFIG_HVISOR_LA64_LINUX_DIR=" .config | cut -d'"' -f2)
+BUILDROOT_DIR=$(grep "^CONFIG_BUILDROOT_DIR=" .config | cut -d'"' -f2)
+HVISOR_TOOL_DIR=$(grep "^CONFIG_HVISOR_TOOL_DIR=" .config | cut -d'"' -f2)
+CROSS_COMPILE=$(grep "^CONFIG_CROSS_COMPILE=" .config | cut -d'"' -f2)
 
 if [ ! -d "${HVISOR_SRC_DIR}" ]; then
     echo "Error: hvisor source code directory not found: ${HVISOR_SRC_DIR}"
@@ -15,11 +16,11 @@ if [ ! -d "${HVISOR_SRC_DIR}" ]; then
 fi
 
 # Read ARCH and BOARD from environment variables (default values if not set)
-ARCH=${ARCH:-aarch64}  # Default to aarch64 if not provided
-BOARD=${BOARD:-qemu-gicv3}  # Default to qemu-gicv3 if not provided
+ARCH=${ARCH:-loongarch64}
+BOARD=${BOARD:-ls3a5000}
 
-# Log level (modifiable)
-HVISOR_LOG_LEVEL=info
+# Log level - error, warn, info, debug, trace
+HVISOR_LOG_LEVEL=$(grep CONFIG_HVISOR_LOG_LEVEL .config | cut -d'"' -f2)
 HVISOR_ARGS="BID=${ARCH}/${BOARD} LOG=${HVISOR_LOG_LEVEL}"
 
 # Make hvisor
@@ -36,7 +37,8 @@ make ARCH="${ARCH}" clean
 cd lib/gnu-efi && ./build-"${ARCH}".sh
 cd ../..
 
-CMD="make ARCH=${ARCH} V=1"
+VERBOSE=0
+CMD="make ARCH=${ARCH} V=${VERBOSE}"
 echo -e "${BOLD}${YELLOW}Building hvisor UEFI Boot Image, CMD=$CMD${RESET}"
 $CMD
 
@@ -45,11 +47,11 @@ echo -e "${BOLD}${YELLOW}Building hvisor shared object, now building hvisor UEFI
 # Set the cross-compile tools according to ARCH
 case "${ARCH}" in
     aarch64)
-        PREFIX="aarch64-linux-gnu-"
+        PREFIX="${CROSS_COMPILE}"
         EFI_NAME="BOOTAA64.EFI"
         ;;
     loongarch64)
-        PREFIX="loongarch64-unknown-linux-gnu-"
+        PREFIX="${CROSS_COMPILE}"
         EFI_NAME="BOOTLOONGARCH64.EFI"
         ;;
     *)
@@ -82,4 +84,17 @@ cp "${TARGET_EFI}" "${EFI_NAME}"
 ls -lh "${EFI_NAME}"
 file "${EFI_NAME}"
 
-echo -e "${BOLD}${GREEN}Building hvisor UEFI Boot Image done${RESET}"
+echo -e "${BOLD}${GREEN}Building hvisor UEFI Boot Image done: ${EFI_NAME}${RESET}"
+
+# # Dump the .config file
+# if [ -f ".config" ]; then
+#     echo -e "${BOLD}${YELLOW}Dumping .config${RESET}"
+#     terminal_width=$(tput cols)
+#     # print = * terminal_width
+#     printf '=%.0s' $(seq 1 $terminal_width)
+#     cat .config
+#     printf '=%.0s' $(seq 1 $terminal_width)
+#     echo -e "${BOLD}${YELLOW}Done, please check the important options like (vmlinux.bin) and make sure they are correct${RESET}"
+# else
+#     echo -e "${BOLD}${YELLOW}.config file not found${RESET}"
+# fi

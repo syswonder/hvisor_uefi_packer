@@ -1,23 +1,19 @@
 hvisor UEFI Image Packer
+========================
 
-1. build instruction
+currently support for aarch64 and loongarch64 hvisor UEFI loader compilation
 
-1) update HVISOR_SRC in make_image
-2) set the paths and options in menuconfig:
+build instruction:
 
+-------------------------------------------
 make menuconfig
+ARCH=aarch64 BOARD=qemu-gicv3 ./make_image
+-------------------------------------------
 
-3) run:
+the ARCH and BOARD will also be used to build hvisor in make_image
 
-./make_image
+since we also need to cross compile the gnu-efi, use ./make_image will done everything automatically
+you can also just run `make` to build but please notice the environment variables and the gnu-efi cross compile
+static library
 
-2. features
-
-1) support loongarch64 and aarch64 target UEFI image generation
-2) packing hvisor.bin and vmlinux.bin
-
-3. todo
-
-1) vmlinux.bin is used for loongarch with built-in dtb and initramfs, for aarch64 target we may need to change this logic
-
-wheatfox 2025
+wheatfox <wheatfox17@icloud.com> 2025

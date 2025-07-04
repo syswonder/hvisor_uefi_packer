@@ -81,7 +81,7 @@ EFI_STATUS acpi_dump(EFI_SYSTEM_TABLE *SystemTable) {
           xsdt = (ACPI_XSDT *)rsdp->XsdtAddress;
         } else {
           Print(L"[INFO] acpi_dump: RSDT address: 0x%lx\n", rsdp->RsdtAddress);
-          rsdt = (ACPI_RSDT *)rsdp->RsdtAddress;
+          rsdt = (ACPI_RSDT *)(UINTN)rsdp->RsdtAddress;
         }
       }
     } else if (CompareGuid(&ect[i].VendorGuid, &EfiDtbTableGuid)) {
@@ -125,7 +125,7 @@ EFI_STATUS acpi_dump(EFI_SYSTEM_TABLE *SystemTable) {
     Print(L"[INFO] acpi_dump: XSDT Creator Revision: %d\n",
           xsdt->Header.CreatorRevision);
     // dump XSDT entries
-    for (int i = 0; i < (xsdt->Header.Length - sizeof(ACPI_TABLE_HEADER)) / 8;
+    for (UINTN i = 0; i < (xsdt->Header.Length - sizeof(ACPI_TABLE_HEADER)) / 8;
          i++) {
       UINT64 *entry = (UINT64 *)xsdt->TableEntries[i];
       Print(L"[INFO] acpi_dump: XSDT entry %d: 0x%lx\n", i, (UINT64)entry);
@@ -145,7 +145,7 @@ EFI_STATUS acpi_dump(EFI_SYSTEM_TABLE *SystemTable) {
   // dump FADT's DSDT addr
   if (fadt != NULL) {
     Print(L"[INFO] acpi_dump: DSDT address: 0x%lx\n", (UINT64)fadt->Dsdt);
-    dsdt = (ACPI_DSDT *)fadt->Dsdt;
+    dsdt = (ACPI_DSDT *)(UINTN)fadt->Dsdt;
   }
 
   // dump DSDT basic info and AML code size

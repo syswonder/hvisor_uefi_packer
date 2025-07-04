@@ -187,3 +187,41 @@ void print_chars(char *c, int n) {
     Print(L"%c", c1);
   }
 }
+
+// UEFI boot services management
+static UINTN memory_map_size = 0;
+static UINTN map_key, desc_size;
+static UINT32 desc_version;
+static EFI_MEMORY_DESCRIPTOR *memory_map_desc;
+
+EFI_STATUS exit_boot_services(EFI_HANDLE ImageHandle,
+                              EFI_SYSTEM_TABLE *SystemTable) {
+  EFI_STATUS status;
+  // get memory map
+  memory_map_size = 0;
+  memory_map_desc = NULL;
+  status = uefi_call_wrapper(SystemTable->BootServices->GetMemoryMap, 5,
+                             &memory_map_size, memory_map_desc, &map_key,
+                             &desc_size, &desc_version);
+
+  check(status, "GetMemoryMap (1st call)", EFI_BUFFER_TOO_SMALL, SystemTable);
+  Print(L"[INFO] exit_boot_services: memory_map_size = %ld\n", memory_map_size);
+
+  memory_map_size += 20 * desc_size;
+  status = uefi_call_wrapper(SystemTable->BootServices->AllocatePool, 3,
+                             EfiLoaderData, memory_map_size,
+                             (void **)&memory_map_desc);
+  if (memory_map_desc == NULL) {
+    Print(L"[ERROR] exit_boot_services: AllocatePool failed !!!\n");
+    halt();
+  }
+
+  // the below two call should be place just in next to each other
+  // otherwise, the map key will changed when call ExitBootServices()!!
+  status = uefi_call_wrapper(SystemTable->BootServices->GetMemoryMap, 5,
+                             &memory_map_size, memory_map_desc, &map_key,
+                             &desc_size, &desc_version);
+  status = uefi_call_wrapper(SystemTable->BootServices->ExitBootServices, 2,
+                             ImageHandle, map_key);
+  return status;
+}

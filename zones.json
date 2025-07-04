@@ -1,16 +1,5 @@
 {
   "nonroot": [
-    {
-      "name": "linux1",
-      "load_addr": "0x90000000c0200000"
-    },
-    {
-      "name": "linux2",
-      "load_addr": "0x90000000a0200000"
-    },
-    {
-      "name": "linux3",
-      "load_addr": "0x9000000100200000"
-    }
+   
   ]
 } 

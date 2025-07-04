@@ -84,17 +84,17 @@ cp "${TARGET_EFI}" "${EFI_NAME}"
 ls -lh "${EFI_NAME}"
 file "${EFI_NAME}"
 
-echo -e "${BOLD}${GREEN}Building hvisor UEFI Boot Image done${RESET}"
+echo -e "${BOLD}${GREEN}Building hvisor UEFI Boot Image done: ${EFI_NAME}${RESET}"
 
-# Dump the .config file
-if [ -f ".config" ]; then
-    echo -e "${BOLD}${YELLOW}Dumping .config${RESET}"
-    terminal_width=$(tput cols)
-    # print = * terminal_width
-    printf '=%.0s' $(seq 1 $terminal_width)
-    cat .config
-    printf '=%.0s' $(seq 1 $terminal_width)
-    echo -e "${BOLD}${YELLOW}Done, please check the important options like (vmlinux.bin) and make sure they are correct${RESET}"
-else
-    echo -e "${BOLD}${YELLOW}.config file not found${RESET}"
-fi
+# # Dump the .config file
+# if [ -f ".config" ]; then
+#     echo -e "${BOLD}${YELLOW}Dumping .config${RESET}"
+#     terminal_width=$(tput cols)
+#     # print = * terminal_width
+#     printf '=%.0s' $(seq 1 $terminal_width)
+#     cat .config
+#     printf '=%.0s' $(seq 1 $terminal_width)
+#     echo -e "${BOLD}${YELLOW}Done, please check the important options like (vmlinux.bin) and make sure they are correct${RESET}"
+# else
+#     echo -e "${BOLD}${YELLOW}.config file not found${RESET}"
+# fi

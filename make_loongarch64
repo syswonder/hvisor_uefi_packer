@@ -1,6 +1,8 @@
 #!/bin/bash
 # cat configs/wheatfox_defconfig >.config
 
+cp configs/wheatfox_loongarch64_defconfig .config
+
 # Read paths from .config
 HVISOR_SRC_DIR=$(grep "^CONFIG_HVISOR_SRC_DIR=" .config | cut -d'"' -f2)
 HVISOR_LINUX_SRC=$(grep "^CONFIG_HVISOR_LA64_LINUX_DIR=" .config | cut -d'"' -f2)

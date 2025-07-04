@@ -8,14 +8,14 @@
 #include <efi.h>
 #include <efilib.h>
 
-void hvisor_bin_start();
-void hvisor_bin_end();
+extern void hvisor_bin_start();
+extern void hvisor_bin_end();
 
-void hvisor_zone0_vmlinux_start();
-void hvisor_zone0_vmlinux_end();
+#if defined(CONFIG_ENABLE_VMLINUX)
+extern void hvisor_zone0_vmlinux_start();
+extern void hvisor_zone0_vmlinux_end();
+#endif
 
-void set_dmw();
-void arch_init();
 void init_serial();
 void put_char(char c);
 void print_str(const char *str);
@@ -30,3 +30,10 @@ void memset2(void *dest, int val, int n);
 
 void halt();
 void check();
+
+// arch provided functions
+void arch_init();
+void arch_before_exit_boot_services();
+
+// UEFI boot services management
+EFI_STATUS exit_boot_services(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable);

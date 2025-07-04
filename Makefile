@@ -681,7 +681,7 @@ headerdep:
 
 # Directories & files removed with 'make clean'
 CLEAN_DIRS  +=
-CLEAN_FILES +=	hvisor-uefi-img
+CLEAN_FILES +=	hvisor-uefi-img hvisor.efi BOOTLOONGARCH64.EFI BOOTAA64.EFI
 
 # Directories & files removed with 'make mrproper'
 MRPROPER_DIRS  += include/config include/generated .tmp_objdiff

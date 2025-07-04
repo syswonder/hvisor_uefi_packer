@@ -1,8 +1,8 @@
-
-/**
- * ACPI related definitions
- * wheatfox 2025.3.1 wheatfox17@icloud.com
+/*
+ * Copyright 2025 Syswonder
+ * SPDX-License-Identifier: MulanPSL-2.0
  */
+
 #ifndef _ACPI_H_
 #define _ACPI_H_
 
@@ -48,8 +48,6 @@ typedef struct {
   {0xffe06bdd, 0x6107, 0x46a6, {0x7b, 0xb2, 0x5a, 0x9c, 0x7e, 0xc5, 0x27, 0x5c}}
 
 typedef struct _EFI_ACPI_TABLE_PROTOCOL EFI_ACPI_TABLE_PROTOCOL;
-
-EFI_GUID gEfiAcpiTableProtocolGuid = EFI_ACPI_TABLE_PROTOCOL_GUID;
 
 typedef EFI_STATUS(EFIAPI *EFI_ACPI_TABLE_INSTALL_ACPI_TABLE)(
     IN EFI_ACPI_TABLE_PROTOCOL *This, IN VOID *AcpiTableBuffer,
@@ -133,5 +131,7 @@ typedef struct {
   ACPI_TABLE_HEADER Header;
   UINT8 AmlCode[];
 } __attribute__((packed)) ACPI_DSDT;
+
+EFI_STATUS acpi_dump(EFI_SYSTEM_TABLE *SystemTable);
 
 #endif // _ACPI_H_

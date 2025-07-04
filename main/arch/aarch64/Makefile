@@ -1,1 +1,1 @@
-obj-y += 
+obj-y += arch/aarch64/init.o

@@ -1,0 +1,37 @@
+#
+# Automatically generated file; DO NOT EDIT.
+# hvisor UEFI Boot Image Packer Configuration Menu
+#
+# CONFIG_TARGET_ARCH_LOONGARCH64 is not set
+CONFIG_TARGET_ARCH_AARCH64=y
+
+#
+# Build Configuration
+#
+CONFIG_CROSS_COMPILE="aarch64-linux-gnu-"
+
+#
+# Binary Files
+#
+CONFIG_EMBEDDED_HVISOR_BIN_PATH="../hvisor/target/aarch64-unknown-none/debug/hvisor.bin.tmp"
+CONFIG_HVISOR_BIN_LOAD_ADDR=0x40400000
+# CONFIG_ENABLE_VMLINUX is not set
+
+#
+# Source Directories
+#
+CONFIG_HVISOR_SRC_DIR="../hvisor"
+# CONFIG_ENABLE_HVISOR_LA64_LINUX is not set
+# CONFIG_ENABLE_BUILDROOT is not set
+# CONFIG_ENABLE_HVISOR_TOOL is not set
+
+#
+# Runtime Configuration
+#
+CONFIG_HVISOR_LOG_LEVEL="info"
+CONFIG_HVISOR_SRC_DIR_VALIDATION=y
+CONFIG_EMBEDDED_HVISOR_BIN_PATH_VALIDATION=y
+CONFIG_VMLINUX_PATH_VALIDATION=y
+CONFIG_LA64_LINUX_DIR_VALIDATION=y
+CONFIG_BUILDROOT_DIR_VALIDATION=y
+CONFIG_HVISOR_TOOL_DIR_VALIDATION=y

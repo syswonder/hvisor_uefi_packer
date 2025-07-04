@@ -7,7 +7,6 @@ choice
 
 config TARGET_ARCH_LOONGARCH64
   bool "loongarch64"
-  default y
   help
     Select this option if you are building for LoongArch64.
 
@@ -18,22 +17,144 @@ config TARGET_ARCH_AARCH64
 
 endchoice
 
-config CROSS_COMPILE
-  string "Cross compiler prefix"
-  default "loongarch64-unknown-linux-gnu-"
-  help
-    Prefix for the cross compiler.
+menu "Build Configuration"
+  config CROSS_COMPILE
+    string "Cross compiler prefix"
+    default "loongarch64-unknown-linux-gnu-"
+    help
+      Prefix for the cross compiler.
+endmenu
 
-config EMBEDDED_HVISOR_BIN_PATH
-  string "Path to the embedded hvisor.bin"
-  default "hvisor.bin"
-  help
-    Path to the embedded hvisor.bin file.
+menu "Binary Files"
+  config EMBEDDED_HVISOR_BIN_PATH
+    string "Path to the embedded hvisor.bin (binary striped from ELF)"
+    default "hvisor.bin"
+    help
+      Path to the embedded hvisor.bin file. Don't use any u-boot image binary here. Just use the raw "binary" file stripped from ELF.
 
-config EMBEDDED_VMLINUX_BIN_PATH
-  string "Path to the embedded vmlinux.bin"
-  default "vmlinux.bin"
+  config HVISOR_BIN_LOAD_ADDR
+    hex "hvisor.bin load address"
+    default 0x90000000
+    help
+      Load address for hvisor.bin in memory.
+
+  # Optional vmlinux configuration
+  config ENABLE_VMLINUX
+    bool "Enable vmlinux.bin embedding"
+    default n
+    help
+      Enable this option to embed vmlinux.bin in the boot image.
+
+  config EMBEDDED_VMLINUX_PATH
+    string "Path to the embedded vmlinux.bin"
+    depends on ENABLE_VMLINUX
+    help
+      Path to the embedded vmlinux.bin file.
+
+  config VMLINUX_LOAD_ADDR
+    hex "vmlinux.bin load address"
+    depends on ENABLE_VMLINUX
+    default 0x80000000
+    help
+      Load address for vmlinux.bin in memory.
+endmenu
+
+menu "Source Directories"
+  config HVISOR_SRC_DIR
+    string "Path to hvisor source code directory"
+    default "../hvisor"
+    help
+      Path to the hvisor source code directory.
+
+  # Optional hvisor-la64-linux configuration
+  config ENABLE_HVISOR_LA64_LINUX
+    bool "Enable hvisor-la64-linux integration"
+    default n
+    help
+      Enable this option to include hvisor-la64-linux kernel source.
+
+  config HVISOR_LA64_LINUX_DIR
+    string "Path to hvisor-la64-linux directory"
+    depends on ENABLE_HVISOR_LA64_LINUX
+    help
+      Path to the hvisor-la64-linux directory containing Linux kernel source.
+
+  # Optional buildroot configuration
+  config ENABLE_BUILDROOT
+    bool "Enable buildroot-loongarch64 integration"
+    default n
+    help
+      Enable this option to include buildroot-loongarch64.
+
+  config BUILDROOT_DIR
+    string "Path to buildroot-loongarch64 directory"
+    depends on ENABLE_BUILDROOT
+    help
+      Path to the buildroot-loongarch64 directory.
+
+  # Optional hvisor-tool configuration
+  config ENABLE_HVISOR_TOOL
+    bool "Enable hvisor-tool integration"
+    default n
+    help
+      Enable this option to include hvisor-tool.
+
+  config HVISOR_TOOL_DIR
+    string "Path to hvisor-tool directory"
+    depends on ENABLE_HVISOR_TOOL
+    help
+      Path to the hvisor-tool directory.
+endmenu
+
+menu "Runtime Configuration"
+  config HVISOR_LOG_LEVEL
+    string "hvisor log level (optional)"
+    default "info"
+    help
+      Set the log level for hvisor (error, warn, info, debug, trace). Leave default if not needed.
+endmenu
+
+# Validation rules
+config HVISOR_SRC_DIR_VALIDATION
+  bool
+  default y
+  depends on HVISOR_SRC_DIR != ""
   help
-    Path to the embedded vmlinux.bin file.
+    Validation: hvisor source directory must be specified.
+
+config EMBEDDED_HVISOR_BIN_PATH_VALIDATION
+  bool
+  default y
+  depends on EMBEDDED_HVISOR_BIN_PATH != ""
+  help
+    Validation: hvisor binary path must be specified.
+
+config VMLINUX_PATH_VALIDATION
+  bool
+  default y
+  depends on !ENABLE_VMLINUX || (ENABLE_VMLINUX && EMBEDDED_VMLINUX_PATH != "")
+  help
+    Validation: vmlinux path must be specified when vmlinux is enabled.
+
+config LA64_LINUX_DIR_VALIDATION
+  bool
+  default y
+  depends on !ENABLE_HVISOR_LA64_LINUX || (ENABLE_HVISOR_LA64_LINUX && HVISOR_LA64_LINUX_DIR != "")
+  help
+    Validation: hvisor-la64-linux directory must be specified when enabled.
+
+config BUILDROOT_DIR_VALIDATION
+  bool
+  default y
+  depends on !ENABLE_BUILDROOT || (ENABLE_BUILDROOT && BUILDROOT_DIR != "")
+  help
+    Validation: buildroot directory must be specified when enabled.
+
+config HVISOR_TOOL_DIR_VALIDATION
+  bool
+  default y
+  depends on !ENABLE_HVISOR_TOOL || (ENABLE_HVISOR_TOOL && HVISOR_TOOL_DIR != "")
+  help
+    Validation: hvisor-tool directory must be specified when enabled.
 
 # source "lib/Kconfig"

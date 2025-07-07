@@ -1,6 +1,0 @@
-config CONFIG_BUILD_GNU_EFI
-    bool "Build GNU-EFI"
-    default y
-    help
-        Build GNU-EFI as part of the build process.
-        

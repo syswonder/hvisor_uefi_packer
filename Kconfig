@@ -156,5 +156,3 @@ config HVISOR_TOOL_DIR_VALIDATION
   depends on !ENABLE_HVISOR_TOOL || (ENABLE_HVISOR_TOOL && HVISOR_TOOL_DIR != "")
   help
     Validation: hvisor-tool directory must be specified when enabled.
-
-# source "lib/Kconfig"

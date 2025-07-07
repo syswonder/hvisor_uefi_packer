@@ -1,1 +1,1 @@
-obj-y += arch/loongarch64/uart.o arch/loongarch64/kernel.o arch/loongarch64/init.o
+obj-y += arch/loongarch64/uart.o arch/loongarch64/kernel.o arch/loongarch64/arch.o

@@ -1,5 +1,4 @@
 #!/bin/bash
-# cat configs/wheatfox_defconfig >.config
 
 cp configs/wheatfox_loongarch64_defconfig .config
 

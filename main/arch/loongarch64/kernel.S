@@ -7,8 +7,8 @@ set_dmw:
     csrwr   t0, LOONGARCH_CSR_DMWIN1
     ret
 
-.globl arch_init
-arch_init:
+.globl loongarch_arch_init
+loongarch_arch_init:
     csrwr   ra, LOONGARCH_CSR_KS0
     // set DMW in in mapping mode to avoid UEFI pagetable stuff :(
     // remember we are already in mapping mode!

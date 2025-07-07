@@ -155,7 +155,7 @@ char *get_efi_status_string(EFI_STATUS status) {
   return "UNKNOWN";
 }
 
-char *get_arch() {
+const char *get_arch() {
 #if defined(CONFIG_TARGET_ARCH_AARCH64)
   return "aarch64";
 #elif defined(CONFIG_TARGET_ARCH_LOONGARCH64)

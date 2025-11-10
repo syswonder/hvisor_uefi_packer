@@ -58,6 +58,34 @@ void set_dmw() {}
 
 void print_char(char c);
 
+#elif defined(CONFIG_TARGET_ARCH_RISCV64)
+
+struct sbiret {
+    long error;
+    long value;
+};
+
+static inline struct sbiret sbi_ecall(unsigned long eid, unsigned long fid, unsigned long a0,
+    unsigned long a1, unsigned long a2, unsigned long a3, unsigned long a4, unsigned long a5)
+{
+    register unsigned long _a0 __asm__("a0") = a0;
+    register unsigned long _a1 __asm__("a1") = a1;
+    register unsigned long _a2 __asm__("a2") = a2;
+    register unsigned long _a3 __asm__("a3") = a3;
+    register unsigned long _a4 __asm__("a4") = a4;
+    register unsigned long _a5 __asm__("a5") = a5;
+    register unsigned long _a6 __asm__("a6") = fid;
+    register unsigned long _a7 __asm__("a7") = eid;
+    __asm__ volatile("ecall" : "+r"(_a0), "+r"(_a1) : "r"(_a2), "r"(_a3), "r"(_a4), "r"(_a5),
+                     "r"(_a6), "r"(_a7) : "memory");
+    struct sbiret ret = { .error = (long)_a0, .value = (long)_a1 };
+    return ret;
+}
+
+void print_char(char c){
+    (void)sbi_ecall(0x1, 0, (unsigned long)c, 0, 0, 0, 0, 0);
+}
+
 #else
 #error "Unsupported target arch"
 #endif
@@ -160,6 +188,8 @@ const char *get_arch() {
   return "aarch64";
 #elif defined(CONFIG_TARGET_ARCH_LOONGARCH64)
   return "loongarch64";
+#elif defined(CONFIG_TARGET_ARCH_RISCV64)
+  return "riscv64";
 #else
 #error "Unsupported target arch"
 #endif

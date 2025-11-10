@@ -30,6 +30,8 @@ SECTIONS {
 		*(.got.plt)
 		*(.got)
 
+        *(.hvisor.*)
+
 		/* the EFI loader doesn't seem to like a .bss section, so we stick
 		   it all into .data: */
 		. = ALIGN(16);

@@ -15,6 +15,11 @@ config TARGET_ARCH_AARCH64
   help
     Select this option if you are building for AArch64.
 
+config TARGET_ARCH_RISCV64
+  bool "riscv64"
+  help
+    Select this option if you are building for RISCV64.
+
 endchoice
 
 menu "Build Configuration"

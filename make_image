@@ -54,6 +54,10 @@ case "${ARCH}" in
         PREFIX="${CROSS_COMPILE}"
         EFI_NAME="BOOTLOONGARCH64.EFI"
         ;;
+    riscv64)
+        PREFIX="${CROSS_COMPILE}"
+        EFI_NAME="BOOTRISCV64.EFI"
+        ;;
     *)
         echo "Error: unsupported ARCH: ${ARCH}"
         exit 1

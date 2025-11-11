@@ -4,11 +4,14 @@ set -e
 # Check if .config file exists, and prompt the user
 if [ -f .config ]; then
     echo -e "\033[1;32m.config file detected.\033[0m"
-    # Check if CONFIG_TARGET_ARCH_RISCV64 is enabled in .config
+    # Check if CONFIG_TARGET_ARCH is set to riscv64 in .config
     if ! grep -q "CONFIG_TARGET_ARCH_RISCV64=y" .config; then
         echo -e "\033[1;31mWarning: CONFIG_TARGET_ARCH_RISCV64 is not set to 'y' in .config.\033[0m"
-        read -p "Do you want to continue with the current configuration? (y/n): " confirm
-        if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+        read -p "Do you want to use the default config? (y/n): " confirm
+        if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+            cp configs/qemu_riscv64_defconfig .config
+            echo -e "\033[1;32mUsing default defconfig file.\033[0m"
+        else
             echo "Build cancelled."
             exit 1
         fi
@@ -21,18 +24,9 @@ else
     echo -e "\033[1;32mUsing default defconfig file.\033[0m"
 fi
 
-# Prompt user to confirm if they want to continue with the build
-echo -e "\033[1;32mCurrent configuration: .config file.\033[0m"
-
 # Get BOARD parameter, default is qemu-plic
 BOARD=${1:-qemu-plic}
 echo -e "\033[1;32mUsing BOARD configuration: $BOARD\033[0m"
 
-read -p "Do you want to continue with the build using the current configuration? (y/n): " confirm
-if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-    echo "Build cancelled."
-    exit 1
-fi
-
-# Execute the build command
+# Execute the build command if user selected default config or confirmed to continue
 ARCH=riscv64 BOARD=$BOARD ./make_image

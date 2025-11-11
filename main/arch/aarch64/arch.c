@@ -33,6 +33,11 @@ static void arch_early_init(void) {}
 static void arch_init(void) {}
 static void arch_before_exit_boot_services(void) {}
 
+static UINTN arch_get_boot_cpu_id(EFI_BOOT_SERVICES *g_bs) {
+  // Implementation can be added if needed
+  return 0;
+}
+
 struct arch_ops aarch64_ops = {
     .type = ARCH_AARCH64,
     .name = "aarch64",
@@ -40,6 +45,8 @@ struct arch_ops aarch64_ops = {
     .early_init = arch_early_init,
     .init = arch_init,
     .before_exit_boot_services = arch_before_exit_boot_services,
+
+    .get_boot_cpu_id = arch_get_boot_cpu_id,
 
     .serial =
         {

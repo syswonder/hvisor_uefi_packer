@@ -35,6 +35,11 @@ static void arch_before_exit_boot_services(void) {
   arch_clear_memory_regions();
 }
 
+static UINTN arch_get_boot_cpu_id(EFI_BOOT_SERVICES *g_bs) {
+    // Implementation can be added if needed
+    return 0;
+}
+
 struct arch_ops loongarch64_ops = {
     .type = ARCH_LOONGARCH64,
     .name = "loongarch64",
@@ -42,6 +47,8 @@ struct arch_ops loongarch64_ops = {
     .early_init = arch_early_init,
     .init = arch_init,
     .before_exit_boot_services = arch_before_exit_boot_services,
+
+    .get_boot_cpu_id = arch_get_boot_cpu_id,
 
     .serial =
         {

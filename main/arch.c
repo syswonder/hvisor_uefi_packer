@@ -11,6 +11,9 @@ extern struct arch_ops aarch64_ops;
 #elif defined(CONFIG_TARGET_ARCH_LOONGARCH64)
 extern struct arch_ops loongarch64_ops;
 #define ARCH_OPS &loongarch64_ops
+#elif defined(CONFIG_TARGET_ARCH_RISCV64)
+extern struct arch_ops riscv64_ops;
+#define ARCH_OPS &riscv64_ops
 #else
 #error "Unsupported target architecture"
 #endif

@@ -1,0 +1,1 @@
+obj-y += arch/riscv64/arch.o

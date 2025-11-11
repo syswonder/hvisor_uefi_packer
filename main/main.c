@@ -58,13 +58,15 @@ static void copy_vmlinux_binary(void) {
 #endif
 
 // Helper function to jump to hvisor
-static void jump_to_hvisor(UINTN hvisor_bin_addr,
-                           EFI_SYSTEM_TABLE *SystemTable) {
+static void jump_to_hvisor(UINTN hvisor_bin_addr, EFI_SYSTEM_TABLE *SystemTable,
+                           UINTN boot_cpu_id) {
   UINTN system_table = (UINTN)SystemTable;
   void (*hvisor_entry)(UINTN, UINTN) = (void (*)(UINTN, UINTN))hvisor_bin_addr;
 
   print_str("[INFO] ok, ready to jump to hvisor entry...\n");
-  hvisor_entry(0, system_table);
+  // Due to hvisor don't parse system_table/device-tree, here system_table would
+  // be ignored by hvisor
+  hvisor_entry(boot_cpu_id, system_table);
 
   // Should never reach here
   while (1) {
@@ -112,12 +114,15 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   copy_vmlinux_binary();
 #endif
 
+  EFI_BOOT_SERVICES *g_bs = SystemTable->BootServices;
+  UINTN boot_cpu_id = ARCH_GET_BOOT_CPU_ID(g_bs);
+
   Print(L"[INFO] exiting boot services...\n");
   status = exit_boot_services(ImageHandle, SystemTable);
   print_str("[INFO] exit_boot_services done\n");
 
   // Serial is already initialized in arch_detect_and_init()
-  jump_to_hvisor(hvisor_bin_addr, SystemTable);
+  jump_to_hvisor(hvisor_bin_addr, SystemTable, boot_cpu_id);
 
   return EFI_SUCCESS;
 }

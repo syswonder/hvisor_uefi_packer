@@ -146,3 +146,7 @@ deploy
 *deploy.zip
 
 .cache
+
+hda-contents
+
+firmware/RISCV_VIRT_VARS.fd

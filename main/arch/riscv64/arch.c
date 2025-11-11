@@ -7,7 +7,6 @@
 #include "efi.h"
 #include "efilib.h"
 #include "riscvbootptotocol.h"
-#include "util.h"
 /// edk2: UefiCpuPkg/Include/Protocol/RiscVBootProtocol.h
 
 struct sbiret {
@@ -40,7 +39,7 @@ static void arch_put_char(char c) {
   (void)sbi_ecall(0x1, 0, (unsigned long)c, 0, 0, 0, 0, 0);
 }
 
-static void arch_get_char(char *c) { UNUSED_ARG(c); }
+static void arch_get_char(char *c) {}
 static void arch_memory_init(void) {}
 static void arch_setup_direct_mapping(void) {}
 static void arch_clear_memory_regions(void) {}
@@ -49,26 +48,24 @@ static void arch_init(void) {
   // bad msg: edk2 has a mapping, we can only alloc use uefi interface.
   // good msg: edk2 mapping VA = PA, we disable mmu and flush tlb here.
 
-  for(int i = 0; i < 256; i++)
-    arch_put_char('a');
   // note: sfence.vma has another purpose: memory barrier
   __asm__ volatile("csrw satp, x0\n"
                    "sfence.vma x0, x0\n");
 }
 static void arch_before_exit_boot_services(void) {}
 
-EFI_GUID gRiscVEfiBootProtocolGuid = {
-    0xccd15fec,
-    0x6f73,
-    0x4eec,
-    {0x83, 0x95, 0x3e, 0x69, 0xe4, 0xb9, 0x40, 0xbf}};
-
-static UINTN arch_get_boot_hart_id() {
+static UINTN arch_get_boot_hart_id(EFI_BOOT_SERVICES *g_bs) {
   EFI_STATUS Status;
   RISCV_EFI_BOOT_PROTOCOL *RiscvBootProtocol = NULL;
 
-  Status = gBS->LocateProtocol(&gRiscVEfiBootProtocolGuid, NULL,
-                               (VOID **)&RiscvBootProtocol);
+  EFI_GUID gRiscVEfiBootProtocolGuid = {
+      0xccd15fec,
+      0x6f73,
+      0x4eec,
+      {0x83, 0x95, 0x3e, 0x69, 0xe4, 0xb9, 0x40, 0xbf}};
+
+  Status = g_bs->LocateProtocol(&gRiscVEfiBootProtocolGuid, NULL,
+                                (VOID **)&RiscvBootProtocol);
   if (EFI_ERROR(Status)) {
     Print(L"Failed to locate RISCV_EFI_BOOT_PROTOCOL\n");
     return Status;

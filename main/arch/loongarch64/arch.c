@@ -35,7 +35,7 @@ static void arch_before_exit_boot_services(void) {
   arch_clear_memory_regions();
 }
 
-static UINTN arch_get_boot_cpu_id() {
+static UINTN arch_get_boot_cpu_id(EFI_BOOT_SERVICES *g_bs) {
     // Implementation can be added if needed
     return 0;
 }

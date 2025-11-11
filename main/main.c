@@ -64,7 +64,8 @@ static void jump_to_hvisor(UINTN hvisor_bin_addr, EFI_SYSTEM_TABLE *SystemTable,
   void (*hvisor_entry)(UINTN, UINTN) = (void (*)(UINTN, UINTN))hvisor_bin_addr;
 
   print_str("[INFO] ok, ready to jump to hvisor entry...\n");
-  // Due to hvisor don't parse system_table/device-tree, here system_table would be ignored by hvisor 
+  // Due to hvisor don't parse system_table/device-tree, here system_table would
+  // be ignored by hvisor
   hvisor_entry(boot_cpu_id, system_table);
 
   // Should never reach here
@@ -113,8 +114,8 @@ efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
   copy_vmlinux_binary();
 #endif
 
-//   UINTN boot_cpu_id = ARCH_GET_BOOT_CPU_ID();
-  UINTN boot_cpu_id = 0;
+  EFI_BOOT_SERVICES *g_bs = SystemTable->BootServices;
+  UINTN boot_cpu_id = ARCH_GET_BOOT_CPU_ID(g_bs);
 
   Print(L"[INFO] exiting boot services...\n");
   status = exit_boot_services(ImageHandle, SystemTable);

@@ -33,7 +33,7 @@ struct arch_ops {
 
   void (*early_init)(void);
   void (*init)(void);
-  UINTN (*get_boot_cpu_id)();
+  UINTN (*get_boot_cpu_id)(EFI_BOOT_SERVICES *g_bs);
   void (*before_exit_boot_services)(void);
 
   struct arch_serial_ops serial;
@@ -53,7 +53,7 @@ void arch_detect_and_init(void);
 #define ARCH_INIT() arch_ops->init()
 #define ARCH_BEFORE_EXIT_BOOT_SERVICES() arch_ops->before_exit_boot_services()
 
-#define ARCH_GET_BOOT_CPU_ID() arch_ops->get_boot_cpu_id()
+#define ARCH_GET_BOOT_CPU_ID(g_bs) arch_ops->get_boot_cpu_id(g_bs)
 
 #define ARCH_SERIAL_INIT() arch_ops->serial.init()
 #define ARCH_PUT_CHAR(c) arch_ops->serial.put_char(c)

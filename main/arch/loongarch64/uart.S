@@ -29,8 +29,8 @@ init_serial:
 	or      ra, a4, zero
 	jirl	zero, ra, 0
     
-.globl print_char
-print_char:
+.globl uart_put_char
+uart_put_char:
 	li.d	a1, CONSOLE_BASE_ADDR
 1:
 	ld.bu	a2, a1, 0x5

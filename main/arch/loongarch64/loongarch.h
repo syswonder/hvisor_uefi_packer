@@ -1048,14 +1048,15 @@
 #define PT_SIZE 320    /* sizeof(struct pt_regs) */
 
 /* LoongArch task_struct offsets. */
-#define TASK_STATE 0           /* offsetof(struct task_struct, __state) */
-#define TASK_THREAD_INFO 8     /* offsetof(struct task_struct, stack) */
-#define TASK_FLAGS 20          /* offsetof(struct task_struct, flags) */
-#define TASK_MM 1184           /* offsetof(struct task_struct, mm) */
-#define TASK_PID 1312          /* offsetof(struct task_struct, pid) */
-#define TASK_STACK_CANARY 1320 /* offsetof(struct task_struct, stack_canary)   \
-                                */
-#define TASK_STRUCT_SIZE 4096  /* sizeof(struct task_struct) */
+#define TASK_STATE 0       /* offsetof(struct task_struct, __state) */
+#define TASK_THREAD_INFO 8 /* offsetof(struct task_struct, stack) */
+#define TASK_FLAGS 20      /* offsetof(struct task_struct, flags) */
+#define TASK_MM 1184       /* offsetof(struct task_struct, mm) */
+#define TASK_PID 1312      /* offsetof(struct task_struct, pid) */
+#define TASK_STACK_CANARY                                                      \
+  1320                        /* offsetof(struct task_struct, stack_canary)    \
+                               */
+#define TASK_STRUCT_SIZE 4096 /* sizeof(struct task_struct) */
 
 /* LoongArch thread_info offsets. */
 #define TI_TASK 0              /* offsetof(struct thread_info, task) */
@@ -1070,34 +1071,40 @@
 #define _IRQ_STACK_START 16368 /* IRQ_STACK_START */
 
 /* LoongArch specific thread_struct offsets. */
-#define THREAD_REG01 2688    /* offsetof(struct task_struct, thread.reg01) */
-#define THREAD_REG03 2696    /* offsetof(struct task_struct, thread.reg03) */
-#define THREAD_REG22 2704    /* offsetof(struct task_struct, thread.reg22) */
-#define THREAD_REG23 2712    /* offsetof(struct task_struct, thread.reg23) */
-#define THREAD_REG24 2720    /* offsetof(struct task_struct, thread.reg24) */
-#define THREAD_REG25 2728    /* offsetof(struct task_struct, thread.reg25) */
-#define THREAD_REG26 2736    /* offsetof(struct task_struct, thread.reg26) */
-#define THREAD_REG27 2744    /* offsetof(struct task_struct, thread.reg27) */
-#define THREAD_REG28 2752    /* offsetof(struct task_struct, thread.reg28) */
-#define THREAD_REG29 2760    /* offsetof(struct task_struct, thread.reg29) */
-#define THREAD_REG30 2768    /* offsetof(struct task_struct, thread.reg30) */
-#define THREAD_REG31 2776    /* offsetof(struct task_struct, thread.reg31) */
-#define THREAD_SCHED_RA 2784 /* offsetof(struct task_struct, thread.sched_ra)  \
-                              */
+#define THREAD_REG01 2688 /* offsetof(struct task_struct, thread.reg01) */
+#define THREAD_REG03 2696 /* offsetof(struct task_struct, thread.reg03) */
+#define THREAD_REG22 2704 /* offsetof(struct task_struct, thread.reg22) */
+#define THREAD_REG23 2712 /* offsetof(struct task_struct, thread.reg23) */
+#define THREAD_REG24 2720 /* offsetof(struct task_struct, thread.reg24) */
+#define THREAD_REG25 2728 /* offsetof(struct task_struct, thread.reg25) */
+#define THREAD_REG26 2736 /* offsetof(struct task_struct, thread.reg26) */
+#define THREAD_REG27 2744 /* offsetof(struct task_struct, thread.reg27) */
+#define THREAD_REG28 2752 /* offsetof(struct task_struct, thread.reg28) */
+#define THREAD_REG29 2760 /* offsetof(struct task_struct, thread.reg29) */
+#define THREAD_REG30 2768 /* offsetof(struct task_struct, thread.reg30) */
+#define THREAD_REG31 2776 /* offsetof(struct task_struct, thread.reg31) */
+#define THREAD_SCHED_RA                                                        \
+  2784 /* offsetof(struct task_struct, thread.sched_ra)                        \
+        */
 #define THREAD_SCHED_CFA                                                       \
-  2792                      /* offsetof(struct task_struct, thread.sched_cfa) */
-#define THREAD_CSRCRMD 2808 /* offsetof(struct task_struct, thread.csr_crmd)   \
-                             */
-#define THREAD_CSRPRMD 2800 /* offsetof(struct task_struct, thread.csr_prmd)   \
-                             */
-#define THREAD_CSREUEN 2816 /* offsetof(struct task_struct, thread.csr_euen)   \
-                             */
-#define THREAD_CSRECFG 2824 /* offsetof(struct task_struct, thread.csr_ecfg)   \
-                             */
-#define THREAD_FPU 2880     /* offsetof(struct task_struct, thread.fpu) */
+  2792 /* offsetof(struct task_struct, thread.sched_cfa) */
+#define THREAD_CSRCRMD                                                         \
+  2808 /* offsetof(struct task_struct, thread.csr_crmd)                        \
+        */
+#define THREAD_CSRPRMD                                                         \
+  2800 /* offsetof(struct task_struct, thread.csr_prmd)                        \
+        */
+#define THREAD_CSREUEN                                                         \
+  2816 /* offsetof(struct task_struct, thread.csr_euen)                        \
+        */
+#define THREAD_CSRECFG                                                         \
+  2824                  /* offsetof(struct task_struct, thread.csr_ecfg)       \
+                         */
+#define THREAD_FPU 2880 /* offsetof(struct task_struct, thread.fpu) */
 #define THREAD_BVADDR                                                          \
   2832 /* offsetof(struct task_struct, thread.csr_badvaddr) */
-#define THREAD_ECODE 2848  /* offsetof(struct task_struct, thread.error_code)  \
+#define THREAD_ECODE                                                           \
+  2848                     /* offsetof(struct task_struct, thread.error_code)  \
                             */
 #define THREAD_TRAPNO 2840 /* offsetof(struct task_struct, thread.trap_nr) */
 

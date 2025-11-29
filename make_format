@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Format all C and H files in the main directory using clang-format
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MAIN_DIR="${SCRIPT_DIR}/main"
+
+echo "Formatting C and H files in ${MAIN_DIR}..."
+
+# Find all .c and .h files in main directory and format them
+find "${MAIN_DIR}" -type f \( -name "*.c" -o -name "*.h" \) -exec clang-format -i {} \;
+
+echo "Formatting complete!"
+

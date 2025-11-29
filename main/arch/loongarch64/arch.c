@@ -6,13 +6,13 @@
 #include "arch.h"
 #include "core.h"
 
-extern void print_char(char c);
+extern void uart_put_char(char c);
 extern void init_serial(void);
 extern void set_dmw(void);
 extern void loongarch_arch_init(void);
 
 static void arch_serial_init(void) { init_serial(); }
-static void arch_put_char(char c) { print_char(c); }
+static void arch_put_char(char c) { uart_put_char(c); }
 static void arch_get_char(char *c) {}
 static void arch_memory_init(void) {}
 static void arch_setup_direct_mapping(void) {}
@@ -36,8 +36,8 @@ static void arch_before_exit_boot_services(void) {
 }
 
 static UINTN arch_get_boot_cpu_id(EFI_BOOT_SERVICES *g_bs) {
-    // Implementation can be added if needed
-    return 0;
+  // Implementation can be added if needed
+  return 0;
 }
 
 struct arch_ops loongarch64_ops = {

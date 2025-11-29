@@ -4,6 +4,7 @@
  */
 
 #include "core.h"
+#include "arch.h"
 
 void memcpy2(void *dest, void *src, int n) {
   char *csrc = (char *)src;
@@ -28,67 +29,11 @@ void halt() {
     ;
 }
 
-#if defined(CONFIG_TARGET_ARCH_AARCH64)
-
-// PL011 UART registers
-#define UART_BASE 0x9000000
-#define UART_FR 0x18          // Flag register
-#define UART_FR_TXFF (1 << 5) // Transmit FIFO full
-#define UART_DR 0x00          // Data register
-
-static inline void mmio_write(uint64_t reg, uint32_t val) {
-  *(volatile uint32_t *)(reg) = val;
-}
-
-static inline uint32_t mmio_read(uint64_t reg) {
-  return *(volatile uint32_t *)(reg);
-}
-
 void print_char(char c) {
-  while (mmio_read(UART_BASE + UART_FR) & UART_FR_TXFF)
-    ;
-  mmio_write(UART_BASE + UART_DR, c);
+  if (arch_ops != NULL) {
+    ARCH_PUT_CHAR(c);
+  }
 }
-
-void arch_init() {}
-void init_serial() {}
-void set_dmw() {}
-
-#elif defined(CONFIG_TARGET_ARCH_LOONGARCH64)
-
-void print_char(char c);
-
-#elif defined(CONFIG_TARGET_ARCH_RISCV64)
-
-struct sbiret {
-    long error;
-    long value;
-};
-
-static inline struct sbiret sbi_ecall(unsigned long eid, unsigned long fid, unsigned long a0,
-    unsigned long a1, unsigned long a2, unsigned long a3, unsigned long a4, unsigned long a5)
-{
-    register unsigned long _a0 __asm__("a0") = a0;
-    register unsigned long _a1 __asm__("a1") = a1;
-    register unsigned long _a2 __asm__("a2") = a2;
-    register unsigned long _a3 __asm__("a3") = a3;
-    register unsigned long _a4 __asm__("a4") = a4;
-    register unsigned long _a5 __asm__("a5") = a5;
-    register unsigned long _a6 __asm__("a6") = fid;
-    register unsigned long _a7 __asm__("a7") = eid;
-    __asm__ volatile("ecall" : "+r"(_a0), "+r"(_a1) : "r"(_a2), "r"(_a3), "r"(_a4), "r"(_a5),
-                     "r"(_a6), "r"(_a7) : "memory");
-    struct sbiret ret = { .error = (long)_a0, .value = (long)_a1 };
-    return ret;
-}
-
-void print_char(char c){
-    (void)sbi_ecall(0x1, 0, (unsigned long)c, 0, 0, 0, 0, 0);
-}
-
-#else
-#error "Unsupported target arch"
-#endif
 
 void print_str(const char *str) {
   while (*str) {
@@ -184,15 +129,10 @@ char *get_efi_status_string(EFI_STATUS status) {
 }
 
 const char *get_arch() {
-#if defined(CONFIG_TARGET_ARCH_AARCH64)
-  return "aarch64";
-#elif defined(CONFIG_TARGET_ARCH_LOONGARCH64)
-  return "loongarch64";
-#elif defined(CONFIG_TARGET_ARCH_RISCV64)
-  return "riscv64";
-#else
-#error "Unsupported target arch"
-#endif
+  if (arch_ops != NULL) {
+    return ARCH_NAME();
+  }
+  return "unknown";
 }
 
 void check(EFI_STATUS status, const char *prefix, EFI_STATUS expected,

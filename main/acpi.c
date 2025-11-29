@@ -36,12 +36,12 @@ static EFI_STATUS find_acpi_table(EFI_SYSTEM_TABLE *SystemTable,
   EFI_CONFIGURATION_TABLE *ect = SystemTable->ConfigurationTable;
 
   for (UINTN i = 0; i < SystemTable->NumberOfTableEntries; i++) {
-    if (CompareGuid(&ect[i].VendorGuid, &Acpi2TableGuid)) {
+    if (CompareGuid(&ect[i].VendorGuid, &Acpi2TableGuid) == 0) {
       Print(L"[INFO] acpi_dump: ACPI table found, version=2\n");
       *AcpiTable = ect[i].VendorTable;
       *version = 2;
       return EFI_SUCCESS;
-    } else if (CompareGuid(&ect[i].VendorGuid, &Acpi1TableGuid)) {
+    } else if (CompareGuid(&ect[i].VendorGuid, &Acpi1TableGuid) == 0) {
       Print(L"[INFO] acpi_dump: ACPI table found, version=1\n");
       *AcpiTable = ect[i].VendorTable;
       *version = 1;
